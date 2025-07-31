@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 31, 2025 at 08:30 PM
+-- Generation Time: Jul 31, 2025 at 09:14 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -528,6 +528,13 @@ CREATE TABLE `feedback_submissions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- Dumping data for table `feedback_submissions`
+--
+
+INSERT INTO `feedback_submissions` (`id`, `feedback_link_id`, `employee_id`, `customer_name`, `customer_phone`, `customer_email`, `rating`, `feedback_text`, `additional_details`, `status`, `ip_address`, `user_agent`, `submission_time`, `created_at`, `has_deep_feedback`, `feedback_unique_id`) VALUES
+(36, 2304, 7, 'Zorawar', '9988221219', 'zorawarss10@gmail.com', 4, '', '', 'Perfect', NULL, NULL, '2025-07-31 18:40:14', '2025-07-31 18:40:14', 0, 'A130');
+
+--
 -- Triggers `feedback_submissions`
 --
 DELIMITER $$
@@ -1024,7 +1031,7 @@ ALTER TABLE `feedback_responses`
 -- AUTO_INCREMENT for table `feedback_submissions`
 --
 ALTER TABLE `feedback_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `notification_logs`
@@ -1097,7 +1104,7 @@ ALTER TABLE `feedback_responses`
 ALTER TABLE `feedback_submissions`
   ADD CONSTRAINT `feedback_submissions_ibfk_1` FOREIGN KEY (`feedback_link_id`) REFERENCES `feedback_links` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `feedback_submissions_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_feedback_submissions_customer` FOREIGN KEY (`feedback_unique_id`) REFERENCES `customers` (`feedback_unique_id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `fk_feedback_submissions_customer` FOREIGN KEY (`feedback_unique_id`) REFERENCES `customers` (`unique_id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `outlets`
