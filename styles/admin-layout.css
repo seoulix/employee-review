@@ -1,0 +1,36 @@
+:root {
+    --accent-color: #34d399;
+    --primary-color: #10b981;
+    --secondary-color: #047857;
+    --background-color: #ffffff;
+    --sidebar-color: #1e293b;
+    --header-color: #2563eb;
+    --text-color: #000000;
+    --font-family: 'Poppins, sans-serif';
+    --font-size: 16px;
+    --border-radius: 8px;
+  }
+  body {
+    background: var(--background-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+  }
+Button{
+  border-radius: var(--border-radius);  
+}
+Card{
+  border-radius: var(--border-radius);  
+}
+.sidebar {
+    background: var(--sidebar-color);
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+}
+.admin-header {
+    background: var(--header-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+    border-radius: var(--border-radius);
+}
