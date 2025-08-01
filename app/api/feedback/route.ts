@@ -31,8 +31,8 @@ const feedbackId = await Database.insert(
   `INSERT INTO feedback_submissions (
     feedback_link_id, employee_id, customer_name, customer_phone, customer_email,
     rating, feedback_text, additional_details, ip_address, user_agent, status,
-    submission_time, created_at, has_deep_feedback, feedback_unique_id
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?)`,
+    submission_time, created_at, has_deep_feedback, feedback_unique_id, tiles
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?)`,
   [
     data.feedback_link_id,
     data.employee_id,
@@ -47,6 +47,7 @@ const feedbackId = await Database.insert(
     data.rating >= 4 ? "Perfect" : data.rating >= 3 ? "Needs Review" : "Counselling",
     hasDeepFeedback ? 1 : 0,
     data.feedback_unique_id,
+    data.tiles ?? null
   ]
 );
     // Insert feedback submission

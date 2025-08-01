@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, Copy, RefreshCw, ExternalLink, QrCode, LinkIcon, QrCodeIcon, Cross, X, Plus, Import } from "lucide-react"
+import { Search, Copy, RefreshCw, ExternalLink, QrCode, LinkIcon, QrCodeIcon, Cross, X, Plus, Import, Timer, TimerIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Label } from "@/components/ui/label"
 import {
@@ -21,6 +21,14 @@ import {
 } from "@/components/ui/dialog"
 // import { QRCode } from "qrcode"
 import  QRCode  from "qrcode"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useMainContext } from "@/app/context/mainContext"
 interface FeedbackLink {
   id: number
   outlet: string
@@ -32,7 +40,7 @@ interface FeedbackLink {
   status: "Active" | "Inactive"
   createdAt: string
   lastUsed: string
-  totalSubmissions: number
+  // totalSubmissions: number
 }
 
 export default function FeedbackLinksPage() {
@@ -46,8 +54,7 @@ export default function FeedbackLinksPage() {
   const [selectedBrand, setSelectedBrand] = useState('');
   const [outlets, setOutlets] = useState<any[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState('');
-const [showSheetId,setShowSheetId] = useState(false);
-
+  const [showSheetId,setShowSheetId] = useState(false);
   function generateQRCode(text:string) {
     QRCode.toDataURL(text, function (err, url:Base64URLString) {
       if (err) return console.error(err);
@@ -55,6 +62,7 @@ const [showSheetId,setShowSheetId] = useState(false);
       setShowQr(true);
     });
   }
+  const {expiryTime,updateExpiryTime,setExpiryTime} = useMainContext();
   // Fetch feedback links
   const getFeedbackLinks = async () => {
     try {
@@ -163,40 +171,40 @@ const [showSheetId,setShowSheetId] = useState(false);
     })
   }
 
-  const toggleStatus = async (id: number) => {
-    try {
-      const link = feedbackLinks.find(l => l.id === id);
-      if (!link) return;
+  // const toggleStatus = async (id: number) => {
+  //   try {
+  //     const link = feedbackLinks.find(l => l.id === id);
+  //     if (!link) return;
 
-      const newStatus = link.status === "Active" ? "Inactive" : "Active";
-      const response = await fetch(`/api/feedback-links/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
-      const json = await response.json();
-      if (json.success) {
-        getFeedbackLinks(); // Refresh the list
-        toast({
-          title: "Status Updated",
-          description: `Feedback link status changed to ${newStatus}`,
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: json.message || "Failed to update status",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "An error occurred while updating status",
-        variant: "destructive",
-      });
-    }
-  }
+  //     const newStatus = link.status === "Active" ? "Inactive" : "Active";
+  //     const response = await fetch(`/api/feedback-links/${id}`, {
+  //       method: 'PUT',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ status: newStatus })
+  //     });
+  //     const json = await response.json();
+  //     if (json.success) {
+  //       getFeedbackLinks(); // Refresh the list
+  //       toast({
+  //         title: "Status Updated",
+  //         description: `Feedback link status changed to ${newStatus}`,
+  //       });
+  //     } else {
+  //       toast({
+  //         title: "Error",
+  //         description: json.message || "Failed to update status",
+  //         variant: "destructive",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     toast({
+  //       title: "Error",
+  //       description: "An error occurred while updating status",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // }
 
   return (
     <AdminLayout>
@@ -219,8 +227,8 @@ Import the Feedback Links from Google Sheet          </Button>
         <Card  style={{borderRadius: "var(--border-radius)"}}>
           <CardHeader>
             <CardTitle>Outlet Feedback Links</CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative flex-1 max-w-sm">
+            <div className="flex items-center justify-between space-x-2">
+              <div className="relative flex-2 max-w-sm">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search outlets..."
@@ -228,6 +236,32 @@ Import the Feedback Links from Google Sheet          </Button>
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
                 />
+              </div>
+              <div className="relative flex-1 max-w-sm flex space-x-2">
+              <TimerIcon className="absolute left-4 top-2.5 h-4 w-8 text-muted-foreground" />
+              <Input
+                type="number"
+                  placeholder="Set Form Expiry Time"
+                  value={expiryTime.value}
+                  onChange={(e) => setExpiryTime({...expiryTime,value:parseInt(e.target.value)})}
+                  className="pl-8"
+                  disabled={expiryTime.format==="Never"}
+                /> 
+                  <Select
+                 value={expiryTime.format}
+                 onValueChange={(value) => setExpiryTime({ ...expiryTime, format: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Minute">Minute</SelectItem>
+                    <SelectItem value="Hour">Hour</SelectItem>
+                    <SelectItem value="Day">Day</SelectItem>
+                    <SelectItem value="Never">No Expiry Time</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={()=>updateExpiryTime()}>Update</Button>
               </div>
             </div>
           </CardHeader>
@@ -273,7 +307,7 @@ Import the Feedback Links from Google Sheet          </Button>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{link.totalSubmissions} submissions</div>
+                        <div className="font-medium">Status: {link.status==="Active"?"Not Submitted":"Submitted"}</div>
                         <div className="text-sm text-gray-500">Last used: {link.lastUsed}</div>
                         <div className="text-sm text-gray-500">Created: {link.createdAt}</div>
                       </div>
@@ -282,9 +316,9 @@ Import the Feedback Links from Google Sheet          </Button>
                       <Badge
                         variant={link.status === "Active" ? "default" : "secondary"}
                         className="cursor-pointer text-white dark:text-black bg-black dark:bg-white dark:border-black"
-                        onClick={() => toggleStatus(link.id)}
+                        // onClick={() => toggleStatus(link.id)}
                       >
-                        {link.status}
+                        {link.status==="Active"?"Pending":"Submitted"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

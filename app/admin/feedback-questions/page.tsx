@@ -23,6 +23,7 @@ import {
   Type,
   CheckSquare,
   Loader2,
+  ArrowUp,
 } from "lucide-react"
 
 interface FeedbackQuestion {
@@ -36,6 +37,16 @@ interface FeedbackQuestion {
   placeholder?: string
   order_index: number
   is_active: boolean
+  outlet_ids?: string[] // Add outlet_ids field
+}
+
+interface Outlet {
+  id: string
+  name: string
+  address: string
+  brand: string
+  city: string
+  state: string
 }
 
 const questionTypes = [
@@ -62,6 +73,21 @@ export default function FeedbackQuestionsPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [luckyDrawEnabled, setLuckyDrawEnabled] = useState(true)
   const [feedbackRequired, setFeedbackRequired] = useState(false)
+  const [alert, setAlert] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    icon?: any;
+    iconColor?: string;
+  }>({
+    show: false,
+    title: "",
+    message: "",
+    icon: null,
+    iconColor: "success"
+  })
+  const [outlets, setOutlets] = useState<Outlet[]>([])
+  const [selectedOutlets, setSelectedOutlets] = useState<string[]>([])
   const [newQuestion, setNewQuestion] = useState<Partial<FeedbackQuestion>>({
     question: "",
     type: "smiley",
@@ -71,6 +97,7 @@ export default function FeedbackQuestionsPage() {
     min_value: 1,
     max_value: 5,
     placeholder: "",
+    outlet_ids: [],
   })
 
   const [checkboxOptions, setCheckboxOptions] = useState<string[]>([])
@@ -81,7 +108,25 @@ export default function FeedbackQuestionsPage() {
 
   useEffect(() => {
     loadQuestions()
+    fetchOutlets()
   }, [])
+
+  // Debug useEffect to track state changes
+  useEffect(() => {
+    console.log('State changed - showAddForm:', showAddForm, 'editingId:', editingId)
+  }, [showAddForm, editingId])
+
+  const fetchOutlets = async () => {
+    try {
+      const response = await fetch("/api/outlets")
+      if (response.ok) {
+        const data = await response.json()
+        setOutlets(data.data || [])
+      }
+    } catch (error) {
+      console.error("Error loading outlets:", error)
+    }
+  }
 
   const loadQuestions = async () => {
     try {
@@ -89,6 +134,9 @@ export default function FeedbackQuestionsPage() {
       const response = await fetch("/api/feedback-questions")
       if (response.ok) {
         const data = await response.json()
+        console.log("||------------Loading Questions------------||")
+        console.log(data.questions)
+        console.log("||--------------Questions Loaded----------||")
         setQuestions(data.questions || [])
         setLuckyDrawEnabled(data.settings?.lucky_draw_enabled ?? true)
         setFeedbackRequired(data.settings?.feedback_required ?? false)
@@ -107,8 +155,14 @@ export default function FeedbackQuestionsPage() {
   const saveQuestion = async (question: Partial<FeedbackQuestion>) => {
     try {
       setSaving(true)
-      const response = await fetch("/api/feedback-questions", {
-        method: "POST",
+      const url = editingId 
+        ? `/api/feedback-questions/${editingId}`
+        : "/api/feedback-questions"
+      
+      const method = editingId ? "PUT" : "POST"
+      
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(question),
       })
@@ -116,29 +170,20 @@ export default function FeedbackQuestionsPage() {
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Question saved successfully",
+          description: editingId ? "Question updated successfully" : "Question saved successfully",
         })
         loadQuestions()
         setShowAddForm(false)
         setEditingId(null)
-        setNewQuestion({
-          question: "",
-          type: "smiley",
-          required: false,
-          is_active: true,
-          options: [],
-          min_value: 1,
-          max_value: 5,
-          placeholder: "",
-        })
+        resetForm()
       } else {
-        throw new Error("Failed to save question")
+        throw new Error(editingId ? "Failed to update question" : "Failed to save question")
       }
     } catch (error) {
       console.error("Error saving question:", error)
       toast({
         title: "Error",
-        description: "Failed to save question",
+        description: editingId ? "Failed to update question" : "Failed to save question",
       })
     } finally {
       setSaving(false)
@@ -202,6 +247,82 @@ export default function FeedbackQuestionsPage() {
     }
   }
 
+  const resetForm = () => {
+    setNewQuestion({
+      question: "",
+      type: "smiley",
+      required: false,
+      is_active: true,
+      options: [],
+      min_value: 1,
+      max_value: 5,
+      placeholder: "",
+      outlet_ids: [],
+    })
+    setCheckboxOptions([])
+    setNewOption("")
+    setSelectedOutlets([])
+  }
+
+  const startEditing = (question: FeedbackQuestion) => {
+    console.log('startEditing called with question:', question)
+    setEditingId(question.id)
+    setShowAddForm(true)
+    
+    // Parse options for checkbox type
+    let options: string[] = []
+    if (question.type === "checkbox" && question.options) {
+      try {
+        if (typeof question.options === 'string') {
+          options = JSON.parse(question.options)
+        } else if (Array.isArray(question.options)) {
+          options = question.options
+        }
+      } catch (error) {
+        console.error('Error parsing checkbox options:', error)
+        options = []
+      }
+    }
+    
+    // Parse outlet_ids
+    let outletIds: string[] = []
+    if (question.outlet_ids) {
+      try {
+        if (typeof question.outlet_ids === 'string' && question.outlet_ids.length>0) {
+          outletIds = question.outlet_ids.split(',')
+        } else if (Array.isArray(question.outlet_ids)) {
+          outletIds = question.outlet_ids
+        }
+      } catch (error) {
+        console.error('Error parsing outlet_ids:', error)
+        outletIds = []
+      }
+    }
+    
+    console.log('Setting checkbox options:', options)
+    console.log('Setting outlet IDs:', outletIds)
+    setCheckboxOptions(options)
+    setSelectedOutlets(outletIds)
+    setNewQuestion({
+      question: question.question,
+      type: question.type,
+      required: question.required,
+      is_active: question.is_active,
+      options: options,
+      min_value: question.min_value,
+      max_value: question.max_value,
+      placeholder: question.placeholder,
+      outlet_ids: outletIds,
+    })
+    console.log('Form should now be visible with editingId:', question.id)
+  }
+
+  const cancelEdit = () => {
+    setShowAddForm(false)
+    setEditingId(null)
+    resetForm()
+  }
+
   const getQuestionTypeIcon = (type: string) => {
     const typeConfig = questionTypes.find((t) => t.value === type)
     return typeConfig ? typeConfig.icon : Type
@@ -225,7 +346,7 @@ export default function FeedbackQuestionsPage() {
         {question.type === "smiley" && (
           <div className="flex gap-2">
             {["😞", "😕", "😐", "😊", "😍"].map((emoji, index) => (
-              <Button  style={{borderRadius: "var(--border-radius)"}} key={index} className="text-2xl p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
+              <button  style={{borderRadius: "var(--border-radius)"}} key={index} className="text-2xl p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
                 {emoji}
               </button>
             ))}
@@ -301,6 +422,12 @@ export default function FeedbackQuestionsPage() {
 
   return (
     <AdminLayout>
+      {alert.show && <div className="fixed bg-white top-0 left-0 w-full bg-opacity-50 z-50 flex items-center justify-center">
+        <div className=" p-4 rounded-lg">
+          <h2 className="text-lg font-bold">{alert.title}{alert.icon != null && <alert.icon   className={`h-7 w-7 inline  text-${alert.iconColor=="success"?"green-500":"red-500"}`} />}</h2>
+          <p className="text-sm text-gray-500">{alert.message}</p>
+        </div>
+      </div>}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -358,18 +485,24 @@ export default function FeedbackQuestionsPage() {
           </CardContent>
         </Card>
 
-        {/* Add Question Form */}
+        {/* Add/Edit Question Form */}
         {showAddForm && (
           <Card  style={{borderRadius: "var(--border-radius)"}}>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Add New Question</CardTitle>
-                <Button  style={{borderRadius: "var(--border-radius)"}} variant="ghost" size="sm" onClick={() => setShowAddForm(false)}>
+                <CardTitle>{editingId ? "Edit Question" : "Add New Question"}</CardTitle>
+                <Button  style={{borderRadius: "var(--border-radius)"}} variant="ghost" size="sm" onClick={cancelEdit}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             </CardHeader>
+
             <CardContent className="space-y-4">
+              {/* Debug info */}
+              <div className="text-xs text-gray-500 mb-4">
+                Debug: showAddForm={showAddForm.toString()}, editingId={editingId || 'null'}
+              </div>
+              
               <div>
                 <Label htmlFor="question">Question Text</Label>
                 <Input
@@ -384,7 +517,14 @@ export default function FeedbackQuestionsPage() {
                 <Label htmlFor="type">Question Type</Label>
                 <Select
                   value={newQuestion.type}
-                  onValueChange={(value: any) => setNewQuestion({ ...newQuestion, type: value })}
+                  onValueChange={(value: any) => {
+                    setNewQuestion({ ...newQuestion, type: value })
+                    // Reset options when type changes
+                    if (value !== "checkbox") {
+                      setCheckboxOptions([])
+                      setNewQuestion(prev => ({ ...prev, options: [] }))
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -519,21 +659,74 @@ export default function FeedbackQuestionsPage() {
                 <Label htmlFor="active">Active</Label>
               </div>
 
+<div className="space-y-3">
+  <Label>Select Outlets (Optional)</Label>
+  <div className="space-y-2">
+    <div className="text-sm text-gray-500 mb-2">
+      Leave empty to make this question available for all outlets, or select specific outlets to make it exclusive.
+    </div>
+    <div className="max-h-40 overflow-y-auto border rounded-md p-2">
+      {outlets.map((outlet) => (
+        <div key={outlet.id} className="flex items-center space-x-2 py-1">
+          <input
+            type="checkbox"
+            id={`outlet-${outlet.id}`}
+            checked={selectedOutlets?.includes(`${outlet.id}`) }
+            
+            onChange={(e) => {
+              console.log("||------------Outlet Checked------------||")
+              console.log(e.target.checked)
+              console.log(outlet.id)
+              console.log(selectedOutlets)
+              console.log("||--------------Outlet Checked----------||")
+              if (e.target.checked) {
+                const newSelected = [...selectedOutlets, outlet.id]
+                setSelectedOutlets(newSelected)
+                setNewQuestion({ ...newQuestion, outlet_ids: newSelected })
+              } else {
+                const newSelected = selectedOutlets.filter(id => id !== outlet.id)
+                setSelectedOutlets(newSelected)
+                setNewQuestion({ ...newQuestion, outlet_ids: newSelected })
+              }
+            }}
+            className="rounded"
+          />
+          <label htmlFor={`outlet-${outlet.id}`} className="text-sm cursor-pointer flex-1">
+            <div className="font-medium">{outlet.name}</div>
+            <div className="text-xs text-gray-500">{outlet.address}</div>
+            <div className="text-xs text-gray-400">{outlet.brand} • {outlet.city}, {outlet.state}</div>
+          </label>
+        </div>
+      ))}
+    </div>
+    {selectedOutlets.length > 0 && (
+      <div className="text-xs text-blue-600">
+        Selected: {selectedOutlets.length} outlet(s)
+      </div>
+    )}
+  </div>
+</div>
+
+
               <div className="flex gap-2">
-                <Button  style={{borderRadius: "var(--border-radius)"}} onClick={() => saveQuestion(newQuestion)} disabled={saving}>
+                <Button  style={{borderRadius: "var(--border-radius)"}} onClick={() => {
+                  saveQuestion(newQuestion)
+                  setAlert({show:true,title:"Question Saved",message:"The Question is now Saved"})
+                  setTimeout(()=>setAlert({show:false,title:"",message:""}),2000)
+                  }} disabled={saving}>
                   {saving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
+                      {editingId ? "Updating..." : "Saving..."}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Save Question
+                      {editingId ? "Update Question" : "Save Question"}
                     </>
                   )}
                 </Button>
-                <Button  style={{borderRadius: "var(--border-radius)"}} variant="outline" onClick={() => setShowAddForm(false)}>
+                <Button  style={{borderRadius: "var(--border-radius)"}} variant="outline" onClick={cancelEdit}>
                   Cancel
                 </Button>
               </div>
@@ -579,7 +772,13 @@ export default function FeedbackQuestionsPage() {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Button  style={{borderRadius: "var(--border-radius)"}} variant="ghost" size="sm" onClick={() => setEditingId(question.id)}>
+                            <Button  style={{borderRadius: "var(--border-radius)"}} variant="ghost" size="sm" onClick={() => {
+                              
+                              console.log('Edit button clicked for question:', question.id)
+                              startEditing(question)
+                              setAlert({show:true,icon:ArrowUp,iconColor:"success",title:"Go Above to Edit",message:"The Editing Section is now Open"})
+                        setTimeout(()=>setAlert({show:false,icon:null,iconColor:"success",title:"",message:""}),6000)
+                            }}>
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button  style={{borderRadius: "var(--border-radius)"}} variant="ghost" size="sm" onClick={() => deleteQuestion(question.id)}>

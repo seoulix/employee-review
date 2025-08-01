@@ -53,7 +53,7 @@ export default function FeedbackFormPage() {
     additional_details: "",
     wants_detailed_feedback: false,
     unique_id: "",
-    
+    tile:{question:"",tiles:[]} as {question:string,tiles:number[]|string[]}
   })
 
 
@@ -65,7 +65,7 @@ export default function FeedbackFormPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
-
+  const [tiles, setTiles] = useState<any>({})
   const [outletData, setOutletData] = useState<OutletData | null>(null)
   const [employees, setEmployees] = useState<Employee[]>([])
   const [feedbackQuestions, setFeedbackQuestions] = useState<FeedbackQuestion[]>([])
@@ -86,6 +86,9 @@ export default function FeedbackFormPage() {
         // Fetch outlet data and employees by token
         const response = await fetch(`/api/feedback-links/token/${token}`)
         const result = await response.json()
+
+        // Making the Tiles formating
+        setTiles(JSON.parse(result.data.tiles));
 
         setFormData({
           ...formData,
@@ -143,12 +146,19 @@ export default function FeedbackFormPage() {
 
 
   const handleRatingClick = (rating: number) => {
-    setFormData({ ...formData, rating })
+    
+    setFormData({ ...formData, rating,tile:{question:tiles[rating].question,tiles:[]} })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Make the tiles array to string and add to the formData
+    const tilesString = tiles[formData.rating].tiles
+    .split(",")
+    .filter((_, index:number) => formData.tile.tiles.includes(index));
+    const tilesSelected = JSON.stringify({question:tiles[formData.rating].question,tiles:tilesString}) 
+    
     if (!formData.employee_id || !formData.rating || !formData.customer_name) {
       setError("Please fill in all required fields")
       return
@@ -191,6 +201,7 @@ export default function FeedbackFormPage() {
           detailed_responses: formData.wants_detailed_feedback ? detailedResponses : null,
           has_deep_feedback: formData.wants_detailed_feedback,
           feedback_unique_id: formData.unique_id,
+          tiles:tilesSelected
         }),
       })
 
@@ -221,6 +232,7 @@ export default function FeedbackFormPage() {
     const texts = ["Very Poor", "Poor", "Average", "Good", "Excellent"]
     return texts[rating - 1] || "Not Rated"
   }
+
 
   // Helper functions for detailed feedback questions
   const renderQuestion = (question: FeedbackQuestion) => {
@@ -388,7 +400,7 @@ export default function FeedbackFormPage() {
               {error || "Sorry, the feedback form has expired. Please request a new link from our staff."}
             </p>
             <p className="text-sm text-gray-500">
-              Feedback forms are valid for 20 seconds to ensure quick and authentic responses.
+              Sorry But this feedback form either already submitted or Invalid/Expired
             </p>
           </CardContent>
         </Card>
@@ -506,6 +518,41 @@ export default function FeedbackFormPage() {
               )}
             </div>
 
+          {  formData.rating>0 && <div className="space-y-2 border border-gray-200 rounded-lg p-4">
+             <Label htmlFor="Quick_Tiles">{formData.rating && tiles[formData.rating].question}</Label>
+             <div className="flex flex-wrap gap-3">
+  {formData.rating && tiles[formData.rating].tiles.split(",").map((tile: string, index: number) => {
+    const isSelected = formData.tile.tiles.includes(index);
+
+    return (
+      <button
+        type="button"
+        key={index}
+        onClick={() => {
+          let newTile = [...formData.tile.tiles];
+          if (isSelected) {
+            newTile = newTile.filter((t) => t !== index);
+          } else {
+            newTile.push(index);
+          }
+          setFormData({ ...formData, tile: { ...formData.tile, tiles: newTile } });
+        }}
+        className={`px-4 py-2 rounded-md text-sm font-medium transition 
+          ${isSelected 
+            ? "bg-yellow-500 text-white shadow-md hover:bg-yellow-600"
+            : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"}
+        `}
+      >
+        {tile.trim()}
+      </button>
+    );
+  })}
+</div>
+
+
+            </div>}
+          
+
             {/* Customer Name */}
             {/* <div className="space-y-2">
               <Label htmlFor="customer_name">Your Name *</Label>
@@ -594,13 +641,13 @@ export default function FeedbackFormPage() {
                       .filter(q => q.is_active)
                       .sort((a, b) => a.order_index - b.order_index)
                       .map((question) => {
-                        console.log('Rendering question:', question)
+                        // console.log('Rendering question:', question)
                         return (
                           <div key={question.id} className="space-y-3 p-4 bg-white dark:text-white dark:bg-gray-900 rounded-lg border">
                             <div className="flex items-center space-x-2">
                               <Label className="font-medium">
                                 {question.question}
-                                {question.required && <span className="text-red-500 ml-1">*</span>}
+                                {question.required===true && <span className="text-red-500 ml-1">*</span>}
                               </Label>
                             </div>
                             {renderQuestion(question)}

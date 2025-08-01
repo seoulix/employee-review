@@ -42,6 +42,7 @@ interface SystemSettings {
   date_format: string
   currency: string
   language: string
+  
 }
 
 export default function SettingsPage() {

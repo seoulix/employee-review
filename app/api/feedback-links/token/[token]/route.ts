@@ -17,6 +17,7 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
         fl.name,
         fl.phone,
         fl.email,
+        fs.tiles,
         fl.arrival_date,
         o.name as outlet_name,
         b.name as brand_name,
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
       LEFT JOIN brands b ON o.brand_id = b.id
       LEFT JOIN cities c ON o.city_id = c.id
       LEFT JOIN states s ON c.state_id = s.id
+      JOIN feedback_settings as fs
       WHERE fl.token = ? AND fl.status = 'Active'
     `, [token])
 

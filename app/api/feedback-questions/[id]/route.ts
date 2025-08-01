@@ -22,6 +22,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       maxValue = data.max_value || 5;
     }
 
+
+
+await Promise.all(
+  data.outlet_ids.map(async (outlet_id:string)=>{
+    await Database.query("INSERT IGNORE INTO outlet_wise_custom_question (question_id,outlet_id) VALUES (?,?)",[params.id,outlet_id])
+  })
+)
+
     await Database.update(
       `
       UPDATE feedback_questions SET

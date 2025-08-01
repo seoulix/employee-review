@@ -31,6 +31,7 @@ interface FeedbackEntry {
   created_at: string
   status: "Perfect" | "Counselling" | "Needs Review"
   customerContact?: string
+  tiles: object
 }
 
 export default function FeedbackReportPage() {
@@ -65,6 +66,7 @@ export default function FeedbackReportPage() {
             created_at: entry.created_at,
             status: entry.status,
             customerContact: entry.customer_phone,
+            tiles: entry.tiles ? JSON.parse(entry.tiles) : null
           })));
         }
       } catch (e) {
@@ -198,6 +200,7 @@ export default function FeedbackReportPage() {
       json.data.feedback.outlet = employeeOutlet;
       json.data.feedback.brand = outletBrand;
       json.data.feedback.location = outletLocation;
+      json.data.feedback.tiles =  json.data.feedback.tiles ? JSON.parse(json.data.feedback.tiles) : null;
       setFeedbackDetails(json.data);
     }
   };
@@ -556,6 +559,18 @@ export default function FeedbackReportPage() {
                     <div>
                       <span className="font-medium">Feedback:</span>
                       <div className="bg-white border rounded p-2 mt-1 text-gray-700">{feedbackDetails.feedback.feedback_text || <span className="text-gray-400"  style={{borderRadius: "var(--border-radius)"}}>No feedback text</span>}</div>
+                    </div>
+                    <div>
+                      <span className="font-medium">Tiles:</span>
+                      <span className="ml-1 text-gray-700">{feedbackDetails.feedback.tiles.question || <span className="text-gray-400"  style={{borderRadius: "var(--border-radius)"}}>No tiles</span>}</span>
+                     <div className="flex flex-wrap">
+
+                      {feedbackDetails?.feedback && feedbackDetails.feedback.tiles && feedbackDetails.feedback.tiles.tiles.map((tile:any,index:number)=>(
+                        <span key={index} className=" border rounded p-2 mt-1 bg-yellow-500 text-white shadow-md ">
+                          {tile}
+                        </span>
+                      ))}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

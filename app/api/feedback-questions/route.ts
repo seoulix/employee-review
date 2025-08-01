@@ -4,10 +4,18 @@ import Database from "@/lib/database"
 export async function GET() {
   try {
     const questions = await Database.query(`
-      SELECT * FROM feedback_questions 
+SELECT 
+fq.*,
+  fq.id AS question_id,
+  GROUP_CONCAT(owcq.outlet_id) AS outlet_ids
+FROM feedback_questions fq
+LEFT JOIN outlet_wise_custom_question owcq 
+  ON fq.id = owcq.question_id
+GROUP BY fq.id, fq.question
       ORDER BY order_index ASC
     `)
 
+    
     const settings = await Database.queryOne(`
       SELECT lucky_draw_enabled, feedback_required 
       FROM feedback_settings 
@@ -28,7 +36,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-
+    const outlet_ids = data.outlet_ids || []
+   
     // Validate required fields
     if (!data.question || !data.type) {
       return NextResponse.json({ 
@@ -68,6 +77,11 @@ export async function POST(request: NextRequest) {
         next_order_index,
         data.is_active !== false,
       ],
+    )
+    await Promise.all(
+      outlet_ids.map(async (outlet_id:string)=>{
+        await Database.query("INSERT INTO outlet_wise_custom_question (question_id,outlet_id) VALUES (?,?)",[questionId,outlet_id])
+      })
     )
 
     return NextResponse.json({
