@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 31, 2025 at 09:14 PM
+-- Generation Time: Aug 01, 2025 at 07:30 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -326,7 +326,7 @@ CREATE TABLE `feedback_links` (
   `name` varchar(255) DEFAULT NULL,
   `token` varchar(255) NOT NULL,
   `url` varchar(500) NOT NULL,
-  `status` enum('Active','Inactive') DEFAULT 'Active',
+  `status` enum('Active','Inactive','Expired') DEFAULT 'Active',
   `total_submissions` int(11) DEFAULT 0,
   `last_used` timestamp NULL DEFAULT NULL,
   `expires_at` timestamp NULL DEFAULT NULL,
@@ -342,7 +342,7 @@ CREATE TABLE `feedback_links` (
 
 INSERT INTO `feedback_links` (`id`, `outlet_id`, `phone`, `email`, `name`, `token`, `url`, `status`, `total_submissions`, `last_used`, `expires_at`, `created_at`, `updated_at`, `arrival_date`, `unique_id`) VALUES
 (2273, 1, '7303406300', 'gunishkaanand2008@gmail.com', 'Gunishka', 'A10018ogjfbr5scq4lmrl2qeb', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A1001'),
-(2274, 1, '9053101052', 'Dhankar.tanmay2008@gmail.com', 'Tejrudra Dhankar', 'A1005iqpxiu3jwcrcz1haj98v9l', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A1005'),
+(2274, 1, '9053101052', 'Dhankar.tanmay2008@gmail.com', 'Tejrudra Dhankar', 'A1005iqpxiu3jwcrcz1haj98v9l', '', 'Expired', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 21:19:00', '2025-07-25', 'A1005'),
 (2275, 1, '9891386272', 'gunikaanand2008@gmail.com', 'Gunika', 'A10029yl0i59iqmvxezd8xp62s', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A1002'),
 (2276, 1, '8851817669', 'anirban.work2487@gmail.com', 'Anirban', 'A1003xwmxwseflwt0g16nry0ovip', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A1003'),
 (2277, 1, '88104 0378', 'upwansharma99@gmail.com', 'Upwan', 'A10041aibs2nig68vh8kgbeqc1o', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A1004'),
@@ -370,10 +370,10 @@ INSERT INTO `feedback_links` (`id`, `outlet_id`, `phone`, `email`, `name`, `toke
 (2299, 3, '9711698463', 'Kharideepak19@gmail.com', 'Deepak', 'A125j0w217z5q9ijhevca4ffpn', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A125'),
 (2302, 3, '769107967', 'arjun0901@icloud.com', 'Arjun', 'A1280wts8h848j2pxvhj5jea4nf', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A128'),
 (2303, 3, '810429327', 'TheAndrew.Bernstein@gmail.com', 'Andrew Bernstein', 'A129tre4iht6znj3fsmefpob8t', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A129'),
-(2304, 3, '9988221219', 'zorawarss10@gmail.com', 'Zorawar', 'A130x6kiyn39vyhs112yw1k2x9', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A130'),
+(2304, 3, '9988221219', 'zorawarss10@gmail.com', 'Zorawar', 'A130x6kiyn39vyhs112yw1k2x9', '', 'Inactive', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 19:29:36', '2025-07-25', 'A130'),
 (2305, 3, '615436195', 'Seanburman@icloud.com', 'Sean Burman', 'A131yd4rpyp1mre2kschagdjt', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A131'),
 (2306, 3, '7099032045', 'loechinphangcho@gmail.com', 'Loechin Phangcho', 'A132cap3uxbszqlndeg7t76qn', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A132'),
-(2307, 3, '9205003564', 'Jaisrana564@gmail.com', 'Aura', 'A133musjkcg2n1d0ai4yis3uhz', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A133'),
+(2307, 3, '9205003564', 'Jaisrana564@gmail.com', 'Aura', 'A133musjkcg2n1d0ai4yis3uhz', '', 'Inactive', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 23:34:45', '2025-07-25', 'A133'),
 (2308, 3, '9810893604', 'khanna.divya7@gmail.com', 'Divya', 'A134zphiaz6foahy8rmdpczjx', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A134'),
 (2309, 3, '9871444377', 'Thapa.rahul@gmail.com', 'Madhu', 'A1358s93ih0tbq6c3q2fk02hj', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A135'),
 (2310, 3, '9999600075', 'Rameek.khullar@gmail.com', 'Ramneek Khullar', 'A136b669hzlrichr54qeg2y0n', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A136'),
@@ -388,8 +388,8 @@ INSERT INTO `feedback_links` (`id`, `outlet_id`, `phone`, `email`, `name`, `toke
 (2319, 4, '9899946164', 'preethi.pillai3@gmail.com', 'Preethi Nair', 'A1459z9zh3gtytcs4vi5kkow', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A145'),
 (2320, 4, '9654982229', 'yusufmassey@gmail.com', 'Massey', 'A146pnif98j5h59fnj7vf9d2n', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A146'),
 (2321, 4, '7011103644', 'deeptirawal@gmail.com', 'Deepti', 'A147bm26mek59viq6xu20rqfvb', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A147'),
-(2322, 4, '9910211130', 'anshul.vj@gmail.com', 'Anshul Ahuja', 'A148kdotcjkfi7d34pcwstq19', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A148'),
-(2323, 4, '9971444008', 'charanpreet16@gmail.com', 'Charanpreet Bidhuri', 'A149b7qdndm9hctx8s664etw3o', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A149'),
+(2322, 4, '9910211130', 'anshul.vj@gmail.com', 'Anshul Ahuja', 'A148kdotcjkfi7d34pcwstq19', '', 'Inactive', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 21:22:47', '2025-07-25', 'A148'),
+(2323, 4, '9971444008', 'charanpreet16@gmail.com', 'Charanpreet Bidhuri', 'A149b7qdndm9hctx8s664etw3o', '', 'Inactive', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 23:08:33', '2025-07-25', 'A149'),
 (2324, 4, '9999011654', 'tanishbhutani100@gmail.com', 'Tanish', 'A150sveb7beli0csy6rdp8lo5a', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A150'),
 (2325, 4, '9818500203', 'hitesh.t.das@gmail.com', 'Hitesh t das', 'A151p7arrjymgtkrwqoswwvgyj', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A151'),
 (2326, 4, '2693917910', 'uttkarsh.singh2004@gmail.com', 'Uttkarsh Singh', 'A152vpr2nbb5e1limp7ic3cqm', '', 'Active', 0, NULL, NULL, '2025-07-31 17:07:24', '2025-07-31 17:07:24', '2025-07-25', 'A152'),
@@ -462,9 +462,10 @@ INSERT INTO `feedback_questions` (`id`, `question`, `type`, `required`, `options
 (2, 'Rate the service quality', 'star', 1, NULL, 1, 5, NULL, 2, 1, '2025-07-19 09:47:32', '2025-07-19 09:47:32'),
 (3, 'How likely are you to recommend us?', 'slider', 0, NULL, 1, 10, NULL, 3, 1, '2025-07-19 09:47:32', '2025-07-19 09:47:32'),
 (4, 'Any additional comments?', 'text', 0, NULL, NULL, NULL, NULL, 4, 1, '2025-07-19 09:47:32', '2025-07-19 09:47:32'),
-(5, 'What aspects of our service could be improved?', 'checkbox', 0, '[\"Customer Service\", \"Food Quality\", \"Cleanliness\", \"Speed of Service\", \"Value for Money\"]', NULL, NULL, NULL, 5, 1, '2025-07-19 09:47:32', '2025-07-19 09:47:32'),
+(5, 'What aspects of our service could be improved?', 'checkbox', 0, '[\"Customer Service\",\"Food Quality\",\"Cleanliness\",\"Speed of Service\",\"Value for Money\",\"Team Behaviour\"]', NULL, NULL, NULL, 5, 1, '2025-07-19 09:47:32', '2025-07-31 23:52:44'),
 (6, 'How Was the Host Nature Overall', 'star', 0, '[]', 1, 5, NULL, 6, 1, '2025-07-19 10:25:11', '2025-07-19 10:25:11'),
-(7, 'How was the cleaning there', 'slider', 0, '[]', 1, 5, NULL, 7, 1, '2025-07-20 05:46:57', '2025-07-20 05:46:57');
+(7, 'How was the cleaning there', 'slider', 0, '[]', 1, 5, NULL, 7, 1, '2025-07-20 05:46:57', '2025-07-20 05:46:57'),
+(9, 'What aspects of our service could be improved?', 'text', 0, '[]', 1, 5, 'This isthe test question', 8, 1, '2025-08-01 01:14:17', '2025-08-01 01:14:17');
 
 -- --------------------------------------------------------
 
@@ -480,6 +481,19 @@ CREATE TABLE `feedback_responses` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `feedback_responses`
+--
+
+INSERT INTO `feedback_responses` (`id`, `feedback_submission_id`, `question_id`, `response_value`, `created_at`) VALUES
+(52, 42, 1, '4', '2025-07-31 23:34:45'),
+(53, 42, 2, '2', '2025-07-31 23:34:45'),
+(54, 42, 3, '6', '2025-07-31 23:34:45'),
+(55, 42, 4, 'No', '2025-07-31 23:34:45'),
+(56, 42, 5, '[\"Food Quality\",\"Cleanliness\"]', '2025-07-31 23:34:45'),
+(57, 42, 6, '3', '2025-07-31 23:34:45'),
+(58, 42, 7, '5', '2025-07-31 23:34:45');
+
 -- --------------------------------------------------------
 
 --
@@ -492,15 +506,18 @@ CREATE TABLE `feedback_settings` (
   `feedback_required` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `lastFetchedRow` int(11) DEFAULT NULL
+  `lastFetchedRow` int(11) DEFAULT NULL,
+  `expiry_time` int(11) DEFAULT NULL,
+  `expiry_format` enum('Minute','Hour','Never','Day') DEFAULT NULL,
+  `tiles` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `feedback_settings`
 --
 
-INSERT INTO `feedback_settings` (`id`, `lucky_draw_enabled`, `feedback_required`, `created_at`, `updated_at`, `lastFetchedRow`) VALUES
-(1, 1, 0, '2025-07-19 09:47:32', '2025-07-28 17:32:32', 8);
+INSERT INTO `feedback_settings` (`id`, `lucky_draw_enabled`, `feedback_required`, `created_at`, `updated_at`, `lastFetchedRow`, `expiry_time`, `expiry_format`, `tiles`) VALUES
+(1, 1, 0, '2025-07-19 09:47:32', '2025-07-31 22:08:23', 8, 2, 'Day', '{\n  \"1\": {\n    \"question\": \"We\'re sorry your experience wasn\'t great. What went wrong?\",\n    \"tiles\": \"Unhelpful Staff, Dirty Environment, Game Not Working, Misleading Experience, Would Not Recommend\"\n  },\n  \"2\": {\n    \"question\": \"We’d love to improve. What could have been better?\",\n    \"tiles\": \"Late Start, Poor Ambience, Staff Ignored Issues, Game Glitches, Not Worth the Price\"\n  },\n  \"3\": {\n    \"question\": \"Thanks for the feedback. What parts were just okay?\",\n    \"tiles\": \"Average Service, Okay Cleanliness, Game Was Just Fine, Expected More Magic, Could Be Better\"\n  },\n  \"4\": {\n    \"question\": \"We\'re glad you enjoyed it! What did you like?\",\n    \"tiles\": \"Enjoyable Gameplay, Friendly Staff, Clean Setup, Good Value, Liked the Vibe\"\n  },\n  \"5\": {\n    \"question\": \"Awesome! What made your experience magical?\",\n    \"tiles\": \"Excellent Staff Behaviour, Magical Experience, Game Was Immersive, Super Clean Environment, Loved Every Moment\"\n  }\n}\n');
 
 -- --------------------------------------------------------
 
@@ -516,6 +533,7 @@ CREATE TABLE `feedback_submissions` (
   `customer_phone` varchar(20) DEFAULT NULL,
   `customer_email` varchar(255) DEFAULT NULL,
   `rating` int(11) NOT NULL CHECK (`rating` >= 1 and `rating` <= 5),
+  `tiles` varchar(400) DEFAULT NULL,
   `feedback_text` text DEFAULT NULL,
   `additional_details` text DEFAULT NULL,
   `status` enum('Perfect','Counselling','Needs Review') NOT NULL,
@@ -531,8 +549,12 @@ CREATE TABLE `feedback_submissions` (
 -- Dumping data for table `feedback_submissions`
 --
 
-INSERT INTO `feedback_submissions` (`id`, `feedback_link_id`, `employee_id`, `customer_name`, `customer_phone`, `customer_email`, `rating`, `feedback_text`, `additional_details`, `status`, `ip_address`, `user_agent`, `submission_time`, `created_at`, `has_deep_feedback`, `feedback_unique_id`) VALUES
-(36, 2304, 7, 'Zorawar', '9988221219', 'zorawarss10@gmail.com', 4, '', '', 'Perfect', NULL, NULL, '2025-07-31 18:40:14', '2025-07-31 18:40:14', 0, 'A130');
+INSERT INTO `feedback_submissions` (`id`, `feedback_link_id`, `employee_id`, `customer_name`, `customer_phone`, `customer_email`, `rating`, `tiles`, `feedback_text`, `additional_details`, `status`, `ip_address`, `user_agent`, `submission_time`, `created_at`, `has_deep_feedback`, `feedback_unique_id`) VALUES
+(36, 2304, 7, 'Zorawar', '9988221219', 'zorawarss10@gmail.com', 4, NULL, '', '', 'Perfect', NULL, NULL, '2025-07-31 18:40:14', '2025-07-31 18:40:14', 0, 'A130'),
+(39, 2304, 7, 'Zorawar', '9988221219', 'zorawarss10@gmail.com', 3, NULL, '', '', 'Needs Review', NULL, NULL, '2025-07-31 19:29:36', '2025-07-31 19:29:36', 0, 'A130'),
+(40, 2322, 4, 'Anshul Ahuja', '9910211130', 'anshul.vj@gmail.com', 4, NULL, 'Nice Staff and All', 'Good Behaviour', 'Perfect', NULL, NULL, '2025-07-31 21:22:47', '2025-07-31 21:22:47', 0, 'A148'),
+(41, 2323, 4, 'Charanpreet Bidhuri', '9971444008', 'charanpreet16@gmail.com', 4, '{\"question\":\"We\'re glad you enjoyed it! What did you like?\",\"tiles\":[\" Friendly Staff\",\" Liked the Vibe\"]}', 'sds', '', 'Perfect', NULL, NULL, '2025-07-31 23:08:33', '2025-07-31 23:08:33', 0, 'A149'),
+(42, 2307, 3, 'Aura', '9205003564', 'Jaisrana564@gmail.com', 3, '{\"question\":\"Thanks for the feedback. What parts were just okay?\",\"tiles\":[\"Average Service\",\" Okay Cleanliness\",\" Game Was Just Fine\",\" Expected More Magic\",\" Could Be Better\"]}', 'I was thinking more good services as the level of Hospitality and welcome and will to make the customer happy was not there', 'Other things like food interior and Games was good', 'Needs Review', NULL, NULL, '2025-07-31 23:34:45', '2025-07-31 23:34:45', 1, 'A133');
 
 --
 -- Triggers `feedback_submissions`
@@ -541,7 +563,7 @@ DELIMITER $$
 CREATE TRIGGER `after_feedback_submission` AFTER INSERT ON `feedback_submissions` FOR EACH ROW BEGIN
   UPDATE feedback_links
   SET status = 'Inactive'
-  WHERE token = NEW.feedback_unique_id;
+  WHERE unique_id = NEW.feedback_unique_id;
 END
 $$
 DELIMITER ;
@@ -651,6 +673,47 @@ CREATE TABLE `outlet_feedback_summary` (
 ,`feedback_url` varchar(500)
 ,`link_submissions` int(11)
 );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `outlet_wise_custom_question`
+--
+
+CREATE TABLE `outlet_wise_custom_question` (
+  `id` int(11) NOT NULL,
+  `question_id` varchar(5) DEFAULT NULL,
+  `outlet_id` varchar(5) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `outlet_wise_custom_question`
+--
+
+INSERT INTO `outlet_wise_custom_question` (`id`, `question_id`, `outlet_id`) VALUES
+(6, '11', '1'),
+(9, '12', '1'),
+(25, '7', '1'),
+(10, '12', '2'),
+(24, '7', '2'),
+(11, '12', '3'),
+(17, '5', '3'),
+(23, '7', '3'),
+(12, '12', '4'),
+(22, '7', '4'),
+(13, '12', '5'),
+(16, '5', '5'),
+(21, '7', '5'),
+(14, '12', '6'),
+(15, '5', '6'),
+(20, '7', '6'),
+(3, '10', '7'),
+(8, '12', '7'),
+(7, '12', '8'),
+(26, '5', '8'),
+(18, '7', '8'),
+(1, '9', '8'),
+(19, '7', '9');
 
 -- --------------------------------------------------------
 
@@ -937,6 +1000,13 @@ ALTER TABLE `outlets`
   ADD KEY `idx_outlets_city` (`city_id`);
 
 --
+-- Indexes for table `outlet_wise_custom_question`
+--
+ALTER TABLE `outlet_wise_custom_question`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniqueData_outletid_questionid` (`outlet_id`,`question_id`) USING BTREE;
+
+--
 -- Indexes for table `states`
 --
 ALTER TABLE `states`
@@ -1019,19 +1089,19 @@ ALTER TABLE `feedback_links`
 -- AUTO_INCREMENT for table `feedback_questions`
 --
 ALTER TABLE `feedback_questions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `feedback_responses`
 --
 ALTER TABLE `feedback_responses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- AUTO_INCREMENT for table `feedback_submissions`
 --
 ALTER TABLE `feedback_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `notification_logs`
@@ -1044,6 +1114,12 @@ ALTER TABLE `notification_logs`
 --
 ALTER TABLE `outlets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `outlet_wise_custom_question`
+--
+ALTER TABLE `outlet_wise_custom_question`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `states`
