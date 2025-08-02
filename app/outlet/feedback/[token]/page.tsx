@@ -101,6 +101,8 @@ export default function FeedbackFormPage() {
         const response = await fetch(`/api/feedback-links/token/${token}`)
         const result = await response.json()
 
+        console.log('🔍 Feedback link data:', result.data)
+
         // Making the Tiles formating
         setTiles(JSON.parse(result.data.tiles));
 
@@ -123,6 +125,7 @@ export default function FeedbackFormPage() {
           brand_logo_url: result.data.brand_logo_url,
           city_name: result.data.city_name,
           state_name: result.data.state_name,
+          outlet_image: result.data.outlet_image,
         })
         setFeedbackLinkId(result.data.id)
 
@@ -458,6 +461,7 @@ export default function FeedbackFormPage() {
 
   return (
     <div className="min-h-screen  flex items-center justify-center p-4 dark:text-white dark:bg-[url('https://aws.cloudprojectbootcamp.com/images/starfield.webp')]" >
+     
       <Card className="w-fit max-w-lg overflow-hidden rounded-3xl border-0 ">
         <CardHeader 
           className="relative p-0 overflow-hidden" 
