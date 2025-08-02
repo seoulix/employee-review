@@ -20,7 +20,9 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
         fs.tiles,
         fl.arrival_date,
         o.name as outlet_name,
+        o.outlet_image,
         b.name as brand_name,
+        b.logo_url as brand_logo_url,
         c.name as city_name,
         s.name as state_name
       FROM feedback_links fl

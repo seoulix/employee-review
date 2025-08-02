@@ -26,7 +26,7 @@ export async function GET() {
     if (yesterdayCount === 0) {
       change = 100;
     } else {
-      change =String( ((todayCount - yesterdayCount) / yesterdayCount) * 100)+"%";
+      change = ((todayCount - yesterdayCount) / yesterdayCount) * 100;
     }
     const totalReviewsToday = {
       title: "Total Review Today",
@@ -122,6 +122,31 @@ export async function GET() {
       [],
     )) as { count: number } | null;
 
+    // Total Brands
+    const totalBrands = (await Database.queryOne(
+      `SELECT COUNT(*) as count FROM brands`,
+    )) as { count: number } | null;
+
+    // Total States
+    const totalStates = (await Database.queryOne(
+      `SELECT COUNT(DISTINCT name) as count FROM states`,
+    )) as { count: number } | null;
+
+    // Total Cities
+    const totalCities = (await Database.queryOne(
+      `SELECT COUNT(DISTINCT name) as count FROM cities`,
+    )) as { count: number } | null;
+
+    // Total Outlets
+    const totalOutlets = (await Database.queryOne(
+      `SELECT COUNT(*) as count FROM outlets`,
+    )) as { count: number } | null;
+
+    // Total Employees
+    const totalEmployees = (await Database.queryOne(
+      `SELECT COUNT(*) as count FROM employees`,
+    )) as { count: number } | null;
+
     // Recent activity
     const recentActivity = (await Database.query(`
       SELECT 
@@ -143,6 +168,11 @@ export async function GET() {
         topPerformerToday,
         negativeFeedbacks,
         counsellingAlerts: counsellingAlerts?.count ?? 0,
+        totalBrands: totalBrands?.count ?? 0,
+        totalStates: totalStates?.count ?? 0,
+        totalCities: totalCities?.count ?? 0,
+        totalOutlets: totalOutlets?.count ?? 0,
+        totalEmployees: totalEmployees?.count ?? 0,
         recentActivity: recentActivity.map((activity) => ({
           employee: activity.employee,
           outlet: activity.outlet,

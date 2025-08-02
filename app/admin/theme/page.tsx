@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "next-themes";
 import {
   Palette,
   Upload,
@@ -88,6 +89,7 @@ const colorPresets = [
 
 export default function ThemeCustomizationPage() {
   const { toast } = useToast();
+  const { setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
@@ -151,6 +153,16 @@ export default function ThemeCustomizationPage() {
         });
         // Apply theme changes immediately
         applyThemeChanges();
+        // Apply default theme immediately
+        if (themeSettings.default_theme) {
+          if (themeSettings.default_theme === 'light' || themeSettings.default_theme === 'dark' || themeSettings.default_theme === 'system') {
+            setTheme(themeSettings.default_theme);
+            console.log('Theme applied immediately:', themeSettings.default_theme);
+          }
+        }
+        // Trigger theme data refresh in admin layout
+        // Dispatch a custom event to notify admin layout to refresh theme
+        window.dispatchEvent(new CustomEvent('themeSettingsUpdated'));
       } else {
         throw new Error("Failed to save theme settings");
       }
@@ -620,12 +632,17 @@ export default function ThemeCustomizationPage() {
                       ].map(({ value, icon: Icon, label }) => (
                         <button
                           key={value}
-                          onClick={() =>
+                          onClick={() => {
                             setThemeSettings({
                               ...themeSettings,
                               default_theme: value as any,
-                            })
-                          }
+                            });
+                            // Apply theme immediately
+                            if (value === 'light' || value === 'dark' || value === 'system') {
+                              setTheme(value);
+                              console.log('Theme applied immediately:', value);
+                            }
+                          }}
                           className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
                             themeSettings.default_theme === value
                               ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"

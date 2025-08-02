@@ -2,15 +2,21 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Building2, Lock, Mail } from "lucide-react"
+import { useLoading } from "@/contexts/LoadingContext"
+
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const { showLoading, hideLoading, showToast } = useLoading();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    
+    // Show loading overlay
+    showLoading("Signing you in...");
   
     try {
       const res = await fetch("/api/admin-login", {
@@ -21,8 +27,16 @@ export default function AdminLoginPage() {
   
       if (res.ok) {
         const data = await res.json();
-        localStorage.setItem("authToken",data.authToken)
-        router.push("/admin/dashboard");
+        localStorage.setItem("authToken", data.authToken);
+        
+        // Hide loading and show success toast
+        hideLoading();
+        showToast("Login successful! Redirecting...", "success");
+        
+        // Small delay to show the success message before redirecting
+        setTimeout(() => {
+          router.push("/admin/dashboard");
+        }, 1000);
       } else {
         let errorMessage = "Login failed";
         try {
@@ -31,12 +45,21 @@ export default function AdminLoginPage() {
         } catch (jsonError) {
           console.warn("Failed to parse error response", jsonError);
         }
+        
+        // Hide loading and show error toast
+        hideLoading();
+        showToast(errorMessage, "error");
         setError(errorMessage);
       }
   
     } catch (error) {
       console.error("Fetch failed:", error);
-      setError("Something went wrong. Please check your network or try again later.");
+      const errorMessage = "Something went wrong. Please check your network or try again later.";
+      
+      // Hide loading and show error toast
+      hideLoading();
+      showToast(errorMessage, "error");
+      setError(errorMessage);
     }
   };
   

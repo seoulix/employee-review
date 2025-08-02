@@ -57,6 +57,7 @@ const questionTypes = [
   { value: "checkbox", label: "Checkbox", icon: CheckSquare },
 ]
 import QRCode from "qrcode";
+import { useLoading } from "@/contexts/LoadingContext"
 
 
 
@@ -66,6 +67,7 @@ export default function FeedbackQuestionsPage() {
   const [qrUrl,setQrUrl] = useState('');
   const [showQr,setShowQr] = useState(false);
   const { toast } = useToast()
+  const { showLoading, hideLoading, showToast } = useLoading()
   const [questions, setQuestions] = useState<FeedbackQuestion[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -153,6 +155,8 @@ export default function FeedbackQuestionsPage() {
   }
 
   const saveQuestion = async (question: Partial<FeedbackQuestion>) => {
+    showLoading(editingId ? "Updating question..." : "Saving question...");
+    
     try {
       setSaving(true)
       const url = editingId 
@@ -168,10 +172,8 @@ export default function FeedbackQuestionsPage() {
       })
 
       if (response.ok) {
-        toast({
-          title: "Success",
-          description: editingId ? "Question updated successfully" : "Question saved successfully",
-        })
+        hideLoading();
+        showToast(editingId ? "Question updated successfully!" : "Question saved successfully!", "success");
         loadQuestions()
         setShowAddForm(false)
         setEditingId(null)
@@ -181,10 +183,8 @@ export default function FeedbackQuestionsPage() {
       }
     } catch (error) {
       console.error("Error saving question:", error)
-      toast({
-        title: "Error",
-        description: editingId ? "Failed to update question" : "Failed to save question",
-      })
+      hideLoading();
+      showToast(editingId ? "Failed to update question" : "Failed to save question", "error");
     } finally {
       setSaving(false)
     }
@@ -193,30 +193,30 @@ export default function FeedbackQuestionsPage() {
   const deleteQuestion = async (id: string) => {
     if (!confirm("Are you sure you want to delete this question?")) return
 
+    showLoading("Deleting question...");
+
     try {
       const response = await fetch(`/api/feedback-questions/${id}`, {
         method: "DELETE",
       })
 
       if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Question deleted successfully",
-        })
+        hideLoading();
+        showToast("Question deleted successfully!", "success");
         loadQuestions()
       } else {
         throw new Error("Failed to delete question")
       }
     } catch (error) {
       console.error("Error deleting question:", error)
-      toast({
-        title: "Error",
-        description: "Failed to delete question",
-      })
+      hideLoading();
+      showToast("Failed to delete question", "error");
     }
   }
 
   const saveSettings = async () => {
+    showLoading("Saving settings...");
+    
     try {
       setSaving(true)
       const response = await fetch("/api/feedback-questions/settings", {
@@ -229,19 +229,15 @@ export default function FeedbackQuestionsPage() {
       })
 
       if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Settings saved successfully",
-        })
+        hideLoading();
+        showToast("Settings saved successfully!", "success");
       } else {
         throw new Error("Failed to save settings")
       }
     } catch (error) {
       console.error("Error saving settings:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save settings",
-      })
+      hideLoading();
+      showToast("Failed to save settings", "error");
     } finally {
       setSaving(false)
     }

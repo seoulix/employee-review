@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Gift, Download, Shuffle, Star, Phone, Mail, MapPin, Eye } from "lucide-react"
+import { useLoading } from "@/contexts/LoadingContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
@@ -18,10 +19,17 @@ interface Winner {
   customer_email: string
   total_reviews: number
   last_review_date: string,
-  customer_name:string, 
+  customer_name: string,
+  photo?: string
+  city?: string
+  state?: string
+  feedbackHighlight?: string
+  reviews?: any[]
 }
 
 export default function WinnerDrawPage() {
+  const { showLoading, hideLoading, showToast } = useLoading()
+  
   const [filters, setFilters] = useState({
     outlet: "",
     city: "",
@@ -41,7 +49,7 @@ export default function WinnerDrawPage() {
   const [loading, setLoading] = useState(false)
 
   const [eligibleCustomers, setEligibleCustomers] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Winner | null>(null);
   const [selectedReviewId, setSelectedReviewId] = useState(null);
   const [reviewDetails, setReviewDetails] = useState(null);
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -252,7 +260,7 @@ export default function WinnerDrawPage() {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {eligibleCustomers.map((customer:Winner) => (
-                  <div key={customer.customer_email + customer.customer_phone} className="p-4 border rounded-lg bg-gray-50">
+                  <div key={customer.customer_email + customer.customer_phone} className="p-4 border rounded-lg bg-card">
                     <div className="flex items-center space-x-3 mb-3">
                       <Avatar>
                         <AvatarFallback>
@@ -263,13 +271,13 @@ export default function WinnerDrawPage() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-medium">{customer.customer_name}</h3>
-                        <p className="text-sm text-gray-500">{customer.customer_email}</p>
+                        <h3 className="font-medium text-foreground">{customer.customer_name}</h3>
+                        <p className="text-sm text-muted-foreground">{customer.customer_email}</p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <p className="text-sm text-gray-600">Total Reviews: {customer.total_reviews}</p>
+                      <p className="text-sm text-muted-foreground">Total Reviews: {customer.total_reviews}</p>
                       <Badge variant="secondary">Customer</Badge>
                       <Button  style={{borderRadius: "var(--border-radius)"}}
         size="sm"
@@ -428,31 +436,31 @@ Email
             </DialogHeader>
             {selectedCustomer && (
               <div className="max-h-[60vh] overflow-y-auto pr-2 scrollbar-hide space-y-4">
-                <Card  style={{borderRadius: "var(--border-radius)"}} className="bg-gray-50 border-none shadow-none">
+                <Card  style={{borderRadius: "var(--border-radius)"}} className="bg-card border-none shadow-none">
                   <CardContent className="p-4 space-y-2">
-                    <div className="text-lg font-semibold">{selectedCustomer.customer_name}</div>
-                    <div className="text-sm text-gray-500">{selectedCustomer.customer_email}</div>
-                    <div className="text-sm text-gray-500">{selectedCustomer.customer_phone}</div>
-                    <div className="text-sm text-gray-500">Total Reviews: {selectedCustomer.total_reviews}</div>
+                    <div className="text-lg font-semibold text-foreground">{selectedCustomer.customer_name}</div>
+                    <div className="text-sm text-muted-foreground">{selectedCustomer.customer_email}</div>
+                    <div className="text-sm text-muted-foreground">{selectedCustomer.customer_phone}</div>
+                    <div className="text-sm text-muted-foreground">Total Reviews: {selectedCustomer.total_reviews}</div>
                   </CardContent>
                 </Card>
-                <Card  style={{borderRadius: "var(--border-radius)"}} className="bg-blue-50 border-blue-200">
+                <Card  style={{borderRadius: "var(--border-radius)"}} className="bg-accent border-accent">
                   <CardHeader>
-                    <CardTitle className="text-blue-800 text-lg">Recent Reviews</CardTitle>
+                    <CardTitle className="text-accent-foreground text-lg">Recent Reviews</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {selectedCustomer.reviews && selectedCustomer.reviews.length > 0 ? (
                       selectedCustomer.reviews.map((review) => (
-                        <div key={review.id} className="mb-2 p-2 border rounded bg-white">
+                        <div key={review.id} className="mb-2 p-2 border rounded bg-background">
                           <div className="flex items-center justify-between">
-                            <span className="font-medium">Date:</span>
-                            <span>{new Date(review.created_at).toLocaleDateString()}</span>
+                            <span className="font-medium text-foreground">Date:</span>
+                            <span className="text-foreground">{new Date(review.created_at).toLocaleDateString()}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="font-medium">Rating:</span>
-                            <span>{review.rating}</span>
+                            <span className="font-medium text-foreground">Rating:</span>
+                            <span className="text-foreground">{review.rating}</span>
                           </div>
-                          <div className="truncate text-gray-700"><strong>Feedback:</strong> {review.feedback_text}</div>
+                          <div className="truncate text-foreground"><strong>Feedback:</strong> {review.feedback_text}</div>
                           <Button  style={{borderRadius: "var(--border-radius)"}}
                             size="sm"
                             variant="outline"
@@ -472,7 +480,7 @@ Email
                         </div>
                       ))
                     ) : (
-                      <div className="text-gray-500">No reviews found.</div>
+                      <div className="text-muted-foreground">No reviews found.</div>
                     )}
                   </CardContent>
                 </Card>
@@ -504,23 +512,23 @@ Email
               <div className="max-h-[60vh] overflow-y-auto pr-2 scrollbar-hide space-y-4">
                 {/* Use the same beautiful UI as in your feedback report modal */}
                 {/* Example: */}
-                <Card  style={{borderRadius: "var(--border-radius)"}} className="bg-gray-50 border-none shadow-none">
+                <Card  style={{borderRadius: "var(--border-radius)"}} className="bg-card border-none shadow-none">
                   <CardContent className="p-4 space-y-2">
-                    <div className="text-lg font-semibold">{reviewDetails.feedback.customer_name}</div>
-                    <div className="text-sm text-gray-500">{reviewDetails.feedback.created_at && new Date(reviewDetails.feedback.created_at).toLocaleString()}</div>
-                    <div className="font-medium">Rating: {reviewDetails.feedback.rating}</div>
-                    <div className="font-medium">Feedback: {reviewDetails.feedback.feedback_text || "No Feedback Text Entered"}</div>
-                    {reviewDetails.feedback.has_deep_feedback ? (
-  <Card  style={{borderRadius: "var(--border-radius)"}} className="bg-blue-50 border-blue-200 mt-4">
+                    <div className="text-lg font-semibold text-foreground">{reviewDetails.feedback.customer_name}</div>
+                    <div className="text-sm text-muted-foreground">{reviewDetails.feedback.created_at && new Date(reviewDetails.feedback.created_at).toLocaleString()}</div>
+                    <div className="font-medium text-foreground">Rating: {reviewDetails.feedback.rating}</div>
+                    <div className="font-medium text-foreground">Feedback: {reviewDetails.feedback.feedback_text || "No Feedback Text Entered"}</div>
+                                          {reviewDetails.feedback.has_deep_feedback ? (
+  <Card  style={{borderRadius: "var(--border-radius)"}} className="bg-accent border-accent mt-4">
     <CardHeader>
-      <CardTitle className="text-blue-800 text-lg">Detailed Feedback</CardTitle>
+      <CardTitle className="text-accent-foreground text-lg">Detailed Feedback</CardTitle>
     </CardHeader>
     <CardContent className="space-y-3">
       {reviewDetails.responses && reviewDetails.responses.length > 0 ? (
         reviewDetails.responses.map((resp) => (
           <div key={resp.question_id} className="mb-2">
-            <div className="font-medium text-blue-900">
-              {resp.question} <span className="text-xs text-gray-500">({resp.type})</span>
+            <div className="font-medium text-foreground">
+              {resp.question} <span className="text-xs text-muted-foreground">({resp.type})</span>
             </div>
             <div className="ml-2 mt-1">
               {(() => {
@@ -529,23 +537,23 @@ Email
                 if (Array.isArray(value)) {
                   return value.length > 0
                     ? value.map((v, i) => <Badge key={i} variant="outline" className="mr-1">{v}</Badge>)
-                    : <span className="text-gray-400">No selection</span>;
+                    : <span className="text-muted-foreground">No selection</span>;
                 } else {
                   return value !== undefined && value !== null && value !== ""
-                    ? <span className="bg-white border rounded px-2 py-1">{value}</span>
-                    : <span className="text-gray-400">No response</span>;
+                    ? <span className="bg-background border rounded px-2 py-1 text-foreground">{value}</span>
+                    : <span className="text-muted-foreground">No response</span>;
                 }
               })()}
             </div>
           </div>
         ))
       ) : (
-        <div className="text-gray-500">No detailed feedback provided.</div>
+        <div className="text-muted-foreground">No detailed feedback provided.</div>
       )}
     </CardContent>
   </Card>
 ) : (
-  <div className="text-gray-500 text-center mt-4">No detailed feedback provided.</div>
+  <div className="text-muted-foreground text-center mt-4">No detailed feedback provided.</div>
 )}
                   </CardContent>
                 </Card>

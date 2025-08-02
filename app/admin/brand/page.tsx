@@ -19,17 +19,20 @@ import {
 } from "@/components/ui/dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Edit, Trash2, Search } from "lucide-react"
+import { useLoading } from "@/contexts/LoadingContext"
 
 interface Brand {
   id: number
   name: string
   description: string
+  logo_url?: string
   outlets: number
   status: "Active" | "Inactive"
   createdAt: string
 }
 
 export default function BrandPage() {
+  const { showLoading, hideLoading, showToast } = useLoading()
   const [brands, setBrands] = useState<Brand[]>([])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -38,8 +41,12 @@ export default function BrandPage() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    logo_url: "",
     status: "Active" as "Active" | "Inactive",
   })
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>("")
+  const [isUploading, setIsUploading] = useState(false)
   useEffect(() => {
     fetch('/api/brands')
       .then(res => res.json())
@@ -55,42 +62,134 @@ export default function BrandPage() {
       brand.description.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
+  const handleLogoUpload = async (file: File) => {
+    setIsUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        setFormData(prev => ({ ...prev, logo_url: result.data.url }))
+        setLogoPreview(result.data.url)
+        setLogoFile(null)
+      } else {
+        alert(result.message || 'Upload failed')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Upload failed')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setLogoFile(file)
+      
+      // Create preview
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (editingBrand != null) {
-      setBrands(brands.map((brand) => (brand.id === editingBrand.id ? { ...brand, ...formData } : brand)))
-      const res = await fetch(`/api/brands/${editingBrand.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
-        const { data } = await res.json();
-        
-        // Optionally fetch updated brands from backend here
-      } else {
-        console.log("Can not add brand report dev team")
-      }
-      setEditingBrand(null);
-    } else {
-      // Send POST request to backend
-      console.log("In the add brand option")
+    
+    showLoading(editingBrand ? "Updating brand..." : "Creating brand...")
+    
+    let finalFormData = { ...formData }
+    
+    // Upload logo if selected
+    if (logoFile) {
+      try {
+        const formData = new FormData()
+        formData.append('file', logoFile)
 
-      const res = await fetch('/api/brands', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({...formData,logo_url:null}),
-      });
-      if (res.ok) {
-        const { data } = await res.json();
-        // Optionally fetch updated brands from backend here
-      } else {
-        // Handle error
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        const result = await response.json()
+        
+        if (result.success) {
+          finalFormData.logo_url = result.data.url
+        } else {
+          hideLoading()
+          showToast(result.message || 'Upload failed', 'error')
+          return
+        }
+      } catch (error) {
+        console.error('Upload error:', error)
+        hideLoading()
+        showToast('Upload failed', 'error')
+        return
       }
     }
+
+    try {
+      if (editingBrand != null) {
+        console.log('🔄 Updating brand with data:', finalFormData);
+        setBrands(brands.map((brand) => (brand.id === editingBrand.id ? { ...brand, ...finalFormData } : brand)))
+        const res = await fetch(`/api/brands/${editingBrand.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(finalFormData),
+        });
+        if (res.ok) {
+          const { data } = await res.json();
+          console.log('✅ Brand updated successfully');
+          hideLoading()
+          showToast('Brand updated successfully!', 'success')
+        } else {
+          console.log("❌ Can not update brand - report dev team")
+          hideLoading()
+          showToast('Failed to update brand', 'error')
+        }
+        setEditingBrand(null);
+      } else {
+        // Send POST request to backend
+        console.log("🆕 Creating new brand with data:", finalFormData);
+
+        const res = await fetch('/api/brands', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(finalFormData),
+        });
+        if (res.ok) {
+          const { data } = await res.json();
+          console.log('✅ Brand created successfully');
+          hideLoading()
+          showToast('Brand created successfully!', 'success')
+        } else {
+          console.log("❌ Can not create brand - report dev team")
+          hideLoading()
+          showToast('Failed to create brand', 'error')
+        }
+      }
+    } catch (error) {
+      console.error('Brand operation failed:', error)
+      hideLoading()
+      showToast('Operation failed', 'error')
+    }
+    
     setIsDialogOpen(false)
     setEditingBrand(null)
-    setFormData({ name: "", description: "", status: "Active" })
+    setFormData({ name: "", description: "", logo_url: "", status: "Active" })
+    setLogoFile(null)
+    setLogoPreview("")
   }
 
   const handleEdit = (brand: Brand) => {
@@ -98,23 +197,39 @@ export default function BrandPage() {
     setFormData({
       name: brand.name,
       description: brand.description,
+      logo_url: brand.logo_url || "",
       status: brand.status,
     })
+    setLogoPreview(brand.logo_url || "")
     setIsDialogOpen(true)
   }
 
   const handleDelete = async (id: number) => {
-    const res = await fetch(`/api/brands/${id}`, {method: 'DELETE',});
+    showLoading("Deleting brand...")
     
-    if(res.ok)setBrands(brands.filter((brand) => brand.id !== id))
-    else alert("Can not delete contact the dev team")
-
-    
+    try {
+      const res = await fetch(`/api/brands/${id}`, {method: 'DELETE',});
+      
+      if(res.ok) {
+        setBrands(brands.filter((brand) => brand.id !== id))
+        hideLoading()
+        showToast('Brand deleted successfully!', 'success')
+      } else {
+        hideLoading()
+        showToast("Cannot delete brand", 'error')
+      }
+    } catch (error) {
+      console.error('Delete failed:', error)
+      hideLoading()
+      showToast('Failed to delete brand', 'error')
+    }
   }
 
   const openAddDialog = () => {
     setEditingBrand(null)
-    setFormData({ name: "", description: "", status: "Active" })
+    setFormData({ name: "", description: "", logo_url: "", status: "Active" })
+    setLogoFile(null)
+    setLogoPreview("")
     setIsDialogOpen(true)
   }
 
@@ -160,6 +275,31 @@ export default function BrandPage() {
                     />
                   </div>
                   <div className="grid gap-2">
+                    <Label htmlFor="logo">Brand Logo</Label>
+                    <div className="space-y-2">
+                      <Input
+                        id="logo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        disabled={isUploading}
+                        className="cursor-pointer"
+                      />
+                      {isUploading && (
+                        <p className="text-sm text-muted-foreground">Uploading...</p>
+                      )}
+                      {logoPreview && (
+                        <div className="mt-2">
+                          <img 
+                            src={logoPreview} 
+                            alt="Logo preview" 
+                            className="w-20 h-20 object-contain border rounded-md"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
                     <Label htmlFor="status">Status</Label>
                     <select
                       id="status"
@@ -200,6 +340,7 @@ export default function BrandPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Logo</TableHead>
                   <TableHead>Brand Name</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Outlets</TableHead>
@@ -211,6 +352,19 @@ export default function BrandPage() {
               <TableBody>
                 {filteredBrands.map((brand) => (
                   <TableRow key={brand.id}>
+                    <TableCell>
+                      {brand.logo_url ? (
+                        <img 
+                          src={brand.logo_url} 
+                          alt={`${brand.name} logo`}
+                          className="w-10 h-10 object-contain rounded"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                          <span className="text-xs text-gray-500">No logo</span>
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{brand.name}</TableCell>
                     <TableCell>{brand.description}</TableCell>
                     <TableCell>{brand.outlets}</TableCell>

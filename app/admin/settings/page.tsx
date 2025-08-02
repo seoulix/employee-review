@@ -42,7 +42,7 @@ interface SystemSettings {
   date_format: string
   currency: string
   language: string
-  
+  copyright: string
 }
 
 export default function SettingsPage() {
@@ -85,6 +85,7 @@ Time: {{submission_time}}`,
     date_format: "DD/MM/YYYY",
     currency: "USD",
     language: "en",
+    copyright: "© 2024 Employee Review System. All rights reserved.",
   })
 
   useEffect(() => {
@@ -636,6 +637,24 @@ Time: {{submission_time}}`,
                           })
                         }
                       />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="copyright">Copyright Text</Label>
+                      <Textarea
+                        id="copyright"
+                        value={systemSettings.copyright}
+                        onChange={(e) =>
+                          setSystemSettings({
+                            ...systemSettings,
+                            copyright: e.target.value,
+                          })
+                        }
+                        placeholder="© 2024 Your Company Name. All rights reserved."
+                      />
+                      <div className="text-sm text-gray-500">
+                        This will be displayed at the bottom of all pages. You can include HTML links.
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, Edit, Trash2, Search, Upload, User, BarChart } from "lucide-react"
 import Link from "next/link"
+import { useLoading } from "@/contexts/LoadingContext"
 
 interface Employee {
   id: number
@@ -43,6 +44,7 @@ interface Outlet {
 }
 
 export default function EmployeesPage() {
+  const { showLoading, hideLoading, showToast } = useLoading()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [outlets, setOutlets] = useState<Outlet[]>([])
   const [positions, setPositions] = useState<string[]>([])
@@ -60,6 +62,7 @@ export default function EmployeesPage() {
     joinDate: "",
     status: "Active" as "Active" | "Inactive",
   })
+  const [isUploading, setIsUploading] = useState(false)
 
   const filteredEmployees = employees.filter(
     (employee) =>
@@ -103,6 +106,9 @@ export default function EmployeesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    showLoading(editingEmployee ? "Updating employee..." : "Creating employee...");
+    
     try {
       if (editingEmployee) {
         // Update existing employee
@@ -114,8 +120,11 @@ export default function EmployeesPage() {
         const json = await response.json();
         if (json.success) {
           getEmployees(); // Refresh the list
+          hideLoading();
+          showToast('Employee updated successfully!', 'success');
         } else {
-          alert(json.message || 'Failed to update employee');
+          hideLoading();
+          showToast(json.message || 'Failed to update employee', 'error');
         }
       } else {
         // Create new employee
@@ -127,8 +136,11 @@ export default function EmployeesPage() {
         const json = await response.json();
         if (json.success) {
           getEmployees(); // Refresh the list
+          hideLoading();
+          showToast('Employee created successfully!', 'success');
         } else {
-          alert(json.message || 'Failed to create employee');
+          hideLoading();
+          showToast(json.message || 'Failed to create employee', 'error');
         }
       }
       setIsDialogOpen(false);
@@ -145,7 +157,8 @@ export default function EmployeesPage() {
       });
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred');
+      hideLoading();
+      showToast('An error occurred', 'error');
     }
   };
 
@@ -169,6 +182,8 @@ export default function EmployeesPage() {
 
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this employee?')) {
+      showLoading("Deleting employee...");
+      
       try {
         const response = await fetch(`/api/employees/${id}`, {
           method: 'DELETE'
@@ -176,12 +191,16 @@ export default function EmployeesPage() {
         const json = await response.json();
         if (json.success) {
           getEmployees(); // Refresh the list
+          hideLoading();
+          showToast('Employee deleted successfully!', 'success');
         } else {
-          alert(json.message || 'Failed to delete employee');
+          hideLoading();
+          showToast(json.message || 'Failed to delete employee', 'error');
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('An error occurred');
+        hideLoading();
+        showToast('An error occurred', 'error');
       }
     }
   }
@@ -201,12 +220,36 @@ export default function EmployeesPage() {
     setIsDialogOpen(true)
   }
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // In a real app, you would upload to a server
-      const photoUrl = URL.createObjectURL(file)
-      setFormData({ ...formData, photo: photoUrl })
+      setIsUploading(true)
+      try {
+        // Create FormData for file upload
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', file)
+
+        // Upload file to server
+        const response = await fetch('/api/upload/employee-photo', {
+          method: 'POST',
+          body: uploadFormData
+        })
+
+        const result = await response.json()
+        
+        if (result.success) {
+          setFormData({ ...formData, photo: result.data.url })
+          console.log('✅ Photo uploaded successfully:', result.data.url)
+        } else {
+          console.error('❌ Photo upload failed:', result.message)
+          alert('Failed to upload photo: ' + result.message)
+        }
+      } catch (error) {
+        console.error('❌ Error uploading photo:', error)
+        alert('Error uploading photo')
+      } finally {
+        setIsUploading(false)
+      }
     }
   }
 
@@ -252,9 +295,10 @@ export default function EmployeesPage() {
                           type="button"
                           variant="outline"
                           onClick={() => document.getElementById("photo")?.click()}
+                          disabled={isUploading}
                         >
                           <Upload className="mr-2 h-4 w-4" />
-                          Upload Photo
+                          {isUploading ? "Uploading..." : "Upload Photo"}
                         </Button>
                       </div>
                     </div>

@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import "../styles/admin-layout.css"
 import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { ConditionalThemeToggle } from "@/components/theme-toggle"
 // import { NotificationBell } from "@/components/notification-bell"
 import {
   Building2, LayoutDashboard, MapPin, Store, Users, MessageSquare,
@@ -20,6 +20,9 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { useLoading } from "@/contexts/LoadingContext"
+import { useTheme } from "next-themes"
+import Copyright from "@/components/copyright"
 
 const navigation = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -61,6 +64,8 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children, topRightBarContent }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedItems, setExpandedItems] = useState<string[]>([])
+  const { showLoading, hideLoading, showToast } = useLoading()
+  const { setTheme, theme, systemTheme } = useTheme()
   const defaultThemeSettings = {
     id: 0,
     app_name: "ERS Admin",
@@ -134,6 +139,23 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
       .catch(() => router.push("/admin/login"))
   }, [])
 
+  // Listen for theme settings updates
+  useEffect(() => {
+    const handleThemeUpdate = () => {
+      console.log('Theme settings updated, refreshing theme data...');
+      fetchTheme().then(res => {
+        console.log('Refreshed theme data:', res);
+        setThemeData(res);
+      });
+    };
+
+    window.addEventListener('themeSettingsUpdated', handleThemeUpdate);
+    
+    return () => {
+      window.removeEventListener('themeSettingsUpdated', handleThemeUpdate);
+    };
+  }, []);
+
   useEffect(() => {
     if (!isVerified) return
 
@@ -147,6 +169,7 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
   
     const root = document.documentElement;
   
+    // Apply custom theme colors that work with both light and dark modes
     root.style.setProperty("--primary-color", s.primary_color || "#10b981");
     root.style.setProperty("--secondary-color", s.secondary_color || "#047857");
     root.style.setProperty("--accent-color", s.accent_color || "#34d399");
@@ -158,13 +181,25 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
     root.style.setProperty("--font-size", s.font_size || "16px");
     root.style.setProperty("--border-radius", s.border_radius || "8px");
     root.style.setProperty("--shadow-intensity", s.shadow_intensity || "md");
-    root.style.setProperty("--font-family", s.font_family || "serif");
   
-    // Handle dark mode
-    if (s.dark_mode_enabled === 1 || s.dark_mode_enabled === true) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+    // Apply default theme based on settings
+    if (s.default_theme) {
+      console.log('Applying default theme:', s.default_theme);
+      if (s.default_theme === 'light' || s.default_theme === 'dark') {
+        // Add a small delay to ensure the component is fully mounted
+        setTimeout(() => {
+          setTheme(s.default_theme);
+          console.log('Theme set to:', s.default_theme);
+        }, 100);
+      } else if (s.default_theme === 'system') {
+        // For 'system', set to system to let next-themes detect automatically
+        setTimeout(() => {
+          setTheme('system');
+          console.log('Theme set to system - will auto-detect');
+          console.log('Current system theme:', systemTheme);
+          console.log('Current theme:', theme);
+        }, 100);
+      }
     }
   
     // Inject custom CSS (if present)
@@ -182,7 +217,18 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
   
   useEffect(() => {
     console.log("themeData", themeData);
+    if (themeData?.settings) {
+      console.log("Theme settings:", {
+        dark_mode_enabled: themeData.settings.dark_mode_enabled,
+        default_theme: themeData.settings.default_theme
+      });
+    }
   }, [themeData]);
+
+  // Debug theme changes
+  useEffect(() => {
+    console.log("Theme changed:", { theme, systemTheme });
+  }, [theme, systemTheme]);
 
   useEffect(() => {
     navigation.forEach((item) => {
@@ -252,7 +298,13 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100",
           level > 0 && "ml-8"
         )}
-        onClick={() => setSidebarOpen(false)}
+        onClick={() => {
+          showLoading(`Loading ${item.name}...`);
+          setSidebarOpen(false);
+          setTimeout(() => {
+            hideLoading();
+          }, 500);
+        }}
         style={{borderRadius: "var(--border-radius)"}}
       >
         <item.icon className="mr-3 h-5 w-5" />
@@ -292,7 +344,7 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
         <div className="flex flex-col flex-grow bg-[hsl(var(--sidebar-color))] dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
           <div className="flex h-16 items-center px-4 border-b dark:border-gray-700">
           <Building2 className="h-8 w-8" style={{ color: "var(--primary-color)" }} />
-          <span className="ml-2 text-lg font-semibold dark:text-white">{themeData.settings.app_name || "ERS Admin"}</span>
+          <span className="ml-2 text-lg font-semibold dark:text-white">{themeData?.settings?.app_name || "ERS Admin"}</span>
           </div>
 
           <nav className="flex-1 space-y-1 px-2 py-4 overflow-y-auto">
@@ -314,7 +366,11 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer" onClick={() => {
-                  router.push("/admin/profile")
+                  showLoading("Loading profile settings...");
+                  setTimeout(() => {
+                    hideLoading();
+                    router.push("/admin/profile");
+                  }, 500);
                 }}>
                   <UserCog className="mr-2 h-4 w-4" />
                   Profile Settings
@@ -325,8 +381,13 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
                 </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer" onClick={() => {
-                  localStorage.removeItem("authToken")
-                  router.push("/admin/login")
+                  showLoading("Signing out...")
+                  setTimeout(() => {
+                    localStorage.removeItem("authToken")
+                    hideLoading()
+                    showToast("Signed out successfully", "success")
+                    router.push("/admin/login")
+                  }, 500)
                 }}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
@@ -354,7 +415,7 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
 
             </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
-              <ThemeToggle />
+              <ConditionalThemeToggle darkModeEnabled={themeData?.settings?.dark_mode_enabled === true} />
               {/* <NotificationBell /> */}
               <div className="text-sm text-gray-500 dark:text-gray-400">Welcome back, {currentUser.full_name}</div>
             </div>
@@ -364,6 +425,11 @@ export default function AdminLayout({ children, topRightBarContent }: AdminLayou
         <main className="py-6">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 dark:text-white">{children}</div>
         </main>
+        
+        {/* Copyright Footer */}
+        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <Copyright />
+        </div>
       </div>
     </div>
   )

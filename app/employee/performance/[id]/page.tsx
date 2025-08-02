@@ -231,28 +231,58 @@ export default function EmployeePerformancePage({ params }: { params: { id: stri
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   }
 
-  // Calculate dynamic goals
+  // Calculate dynamic goals based on actual performance
   const maintainHighRatingAchieved = avgRating !== null && avgRating >= 4.8;
   const reviewsThisMonth = reviews.filter(r => isCurrentMonth(new Date(r.date))).length;
   const reviewsThisMonthAchieved = reviewsThisMonth >= 30;
   const zeroNegativeFeedbackAchieved = reviews.length > 0 && reviews.every(r => r.rating > 2);
+  
+  // Dynamic goal targets based on current performance
+  const highRatingTarget = avgRating !== null ? Math.max(4.8, avgRating + 0.2) : 4.8;
+  const monthlyReviewsTarget = Math.max(30, Math.ceil(reviewsThisMonth * 1.2));
+  const positiveFeedbackTarget = positiveReviewPercent !== null ? Math.min(95, positiveReviewPercent + 5) : 95;
 
-  // Calculate dynamic achievements
+  // Calculate dynamic achievements based on actual performance data
   let topPerformerMonth: string | null = null;
   let customerFavoriteMonth: string | null = null;
   let mostImprovedMonth: string | null = null;
+  let consecutiveHighRating: number = 0;
+  let bestMonthRating: number = 0;
+  let bestMonthName: string = "";
+  
   if (performanceData.length > 0) {
-    // Top Performer: any month with avg rating >= 4.9
-    const topMonth = performanceData.find(m => m.rating >= 4.9);
-    if (topMonth) topPerformerMonth = topMonth.month;
-    // Customer Favorite: any month with positive review percent >= 90%
-    const favMonth = performanceData.find(m => m.reviews > 0 && (m.rating >= 4.5) && ((m.rating / 5) * 100 >= 90));
+    // Top Performer: month with highest rating >= 4.8
+    const topMonth = performanceData.reduce((best, current) => 
+      current.rating > best.rating ? current : best
+    );
+    if (topMonth.rating >= 4.8) {
+      topPerformerMonth = topMonth.month;
+      bestMonthRating = topMonth.rating;
+      bestMonthName = topMonth.month;
+    }
+    
+    // Customer Favorite: month with highest positive review percentage
+    const favMonth = performanceData.find(m => m.reviews > 0 && m.rating >= 4.5);
     if (favMonth) customerFavoriteMonth = favMonth.month;
-    // Most Improved: rating increased by >= 0.5 from previous to current month
+    
+    // Most Improved: find month with biggest rating improvement
+    let maxImprovement = 0;
     for (let i = 1; i < performanceData.length; i++) {
-      if (performanceData[i].rating - performanceData[i - 1].rating >= 0.5) {
+      const improvement = performanceData[i].rating - performanceData[i - 1].rating;
+      if (improvement > maxImprovement) {
+        maxImprovement = improvement;
         mostImprovedMonth = performanceData[i].month;
-        break;
+      }
+    }
+    
+    // Consecutive high ratings (4.5+)
+    let currentStreak = 0;
+    for (const month of performanceData) {
+      if (month.rating >= 4.5) {
+        currentStreak++;
+        consecutiveHighRating = Math.max(consecutiveHighRating, currentStreak);
+      } else {
+        currentStreak = 0;
       }
     }
   }
@@ -430,15 +460,21 @@ export default function EmployeePerformancePage({ params }: { params: { id: stri
 
               <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">95%</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {positiveReviewPercent !== null ? `${positiveReviewPercent}%` : "0%"}
+                  </div>
                   <div className="text-sm text-gray-600">Positive Reviews</div>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">4.8+</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {avgRating !== null ? `${avgRating.toFixed(1)}+` : "0.0+"}
+                  </div>
                   <div className="text-sm text-gray-600">Avg Rating</div>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">Top {topPercentile}%</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {topPercentile ? `Top ${topPercentile}%` : "N/A"}
+                  </div>
                   <div className="text-sm text-gray-600">Company Wide</div>
                 </div>
               </div>
@@ -492,19 +528,19 @@ export default function EmployeePerformancePage({ params }: { params: { id: stri
                   <h4 className="font-semibold mb-3">Current Goals</h4>
                   <div className="space-y-3 ">
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg dark:bg-gray-800">
-                      <span>Maintain 4.8+ rating</span>
+                      <span>Maintain {highRatingTarget.toFixed(1)}+ rating</span>
                       <Badge variant="secondary" className={maintainHighRatingAchieved ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
                         {maintainHighRatingAchieved ? "✓ Achieved" : "In Progress"}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg dark:bg-gray-800">
-                      <span>30+ reviews this month</span>
+                      <span>{monthlyReviewsTarget}+ reviews this month</span>
                       <Badge variant="secondary" className={reviewsThisMonthAchieved ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
                         {reviewsThisMonthAchieved ? "✓ Achieved" : "In Progress"}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg dark:bg-gray-800">
-                      <span>Zero negative feedback</span>
+                      <span>{positiveFeedbackTarget}%+ positive feedback</span>
                       <Badge variant="secondary" className={zeroNegativeFeedbackAchieved ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
                         {zeroNegativeFeedbackAchieved ? "✓ Achieved" : "In Progress"}
                       </Badge>
@@ -518,23 +554,40 @@ export default function EmployeePerformancePage({ params }: { params: { id: stri
                       <Award className="h-6 w-6 text-yellow-600" />
                       <div>
                         <div className="font-medium">Top Performer</div>
-                        <div className="text-sm text-gray-600">{topPerformerMonth ? topPerformerMonth : "-"}</div>
+                        <div className="text-sm text-gray-600">
+                          {topPerformerMonth ? `${topPerformerMonth} (${bestMonthRating.toFixed(1)})` : "Not achieved yet"}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg dark:bg-gray-800">
                       <Star className="h-6 w-6 text-green-600" />
                       <div>
                         <div className="font-medium">Customer Favorite</div>
-                        <div className="text-sm text-gray-600">{customerFavoriteMonth ? customerFavoriteMonth : "-"}</div>
+                        <div className="text-sm text-gray-600">
+                          {customerFavoriteMonth ? customerFavoriteMonth : "Not achieved yet"}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg dark:bg-gray-800  ">
+                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg dark:bg-gray-800">
                       <TrendingUp className="h-6 w-6 text-purple-600" />
                       <div>
                         <div className="font-medium">Most Improved</div>
-                        <div className="text-sm text-gray-600">{mostImprovedMonth ? mostImprovedMonth : "-"}</div>
+                        <div className="text-sm text-gray-600">
+                          {mostImprovedMonth ? mostImprovedMonth : "Not achieved yet"}
+                        </div>
                       </div>
                     </div>
+                    {consecutiveHighRating > 0 && (
+                      <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg dark:bg-gray-800">
+                        <TrendingUp className="h-6 w-6 text-blue-600" />
+                        <div>
+                          <div className="font-medium">Consistent Excellence</div>
+                          <div className="text-sm text-gray-600">
+                            {consecutiveHighRating} consecutive months with 4.5+ rating
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

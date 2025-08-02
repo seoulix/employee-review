@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AdminLayout from "@/components/admin-layout";
+import { useLoading } from "@/contexts/LoadingContext";
 
 export default function AdminProfilePage() {
+  const { showLoading, hideLoading, showToast } = useLoading();
   const [profile, setProfile] = useState({
     id: undefined,
     name: "",
@@ -62,30 +64,48 @@ export default function AdminProfilePage() {
     setSaving(true);
     setSuccess(false);
     setError(null);
+    
+    showLoading("Updating profile...");
+    
     const token = localStorage.getItem("authToken");
     if (!token) {
       setError("Not authenticated");
       setSaving(false);
+      hideLoading();
+      showToast("Authentication failed", "error");
       return;
     }
-    // Update profile using the /api/profile endpoint (PUT)
-    const res = await fetch("/api/profile", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-      }),
-    });
-    if (res.ok) {
-      setSuccess(true);
-    } else {
-      setError("Failed to update profile.");
+    
+    try {
+      // Update profile using the /api/profile endpoint (PUT)
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+        }),
+      });
+      
+      if (res.ok) {
+        setSuccess(true);
+        hideLoading();
+        showToast("Profile updated successfully!", "success");
+      } else {
+        setError("Failed to update profile.");
+        hideLoading();
+        showToast("Failed to update profile", "error");
+      }
+    } catch (error) {
+      setError("Network error occurred.");
+      hideLoading();
+      showToast("Network error occurred", "error");
     }
+    
     setSaving(false);
   };
 

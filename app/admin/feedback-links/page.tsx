@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useMainContext } from "@/app/context/mainContext"
+import { useLoading } from "@/contexts/LoadingContext"
 interface FeedbackLink {
   id: number
   outlet: string
@@ -45,6 +46,7 @@ interface FeedbackLink {
 
 export default function FeedbackLinksPage() {
   const { toast } = useToast()
+  const { showLoading, hideLoading, showToast } = useLoading()
   const [feedbackLinks, setFeedbackLinks] = useState<FeedbackLink[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [qrUrl, setQrUrl] = useState<Base64URLString>()
@@ -78,15 +80,25 @@ export default function FeedbackLinksPage() {
 
 
   const importSheetFeedbacks=async ()=>{
-    // Implement the API and that will done all the things
-    const res = await fetch("/api/google-sheet");
-    const json = await res.json();
-    if(json.success){
-      setFeedbackLinks(json.data);
-    }else{
-      toast({ title: "Error", description: json.message, variant: "destructive" });
-    }
+    showLoading("Importing feedback data...");
     
+    try {
+      // Implement the API and that will done all the things
+      const res = await fetch("/api/google-sheet");
+      const json = await res.json();
+      if(json.success){
+        setFeedbackLinks(json.data);
+        hideLoading();
+        showToast("Feedback data imported successfully!", "success");
+      }else{
+        hideLoading();
+        showToast(json.message || "Failed to import feedback data", "error");
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      hideLoading();
+      showToast("Failed to import feedback data", "error");
+    }
   }
 
   const fetchBrands = async () => {
@@ -135,6 +147,8 @@ export default function FeedbackLinksPage() {
   )
 
   const generateNewToken = async (id: number) => {
+    showLoading("Regenerating token...");
+    
     try {
       const response = await fetch(`/api/feedback-links/${id}/regenerate`, {
         method: 'POST'
@@ -142,24 +156,16 @@ export default function FeedbackLinksPage() {
       const json = await response.json();
       if (json.success) {
         getFeedbackLinks(); // Refresh the list
-        toast({
-          title: "Token Regenerated",
-          description: "New feedback link has been generated successfully.",
-        });
+        hideLoading();
+        showToast("Token regenerated successfully!", "success");
       } else {
-        toast({
-          title: "Error",
-          description: json.message || "Failed to regenerate token",
-          variant: "destructive",
-        });
+        hideLoading();
+        showToast(json.message || "Failed to regenerate token", "error");
       }
     } catch (error) {
       console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "An error occurred while regenerating token",
-        variant: "destructive",
-      });
+      hideLoading();
+      showToast("An error occurred while regenerating token", "error");
     }
   }
 

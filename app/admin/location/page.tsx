@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Edit, Trash2, Search } from "lucide-react"
+import { useLoading } from "@/contexts/LoadingContext"
 
 interface State {
   id: number
@@ -31,6 +32,7 @@ interface City {
 }
 
 export default function LocationPage() {
+  const { showLoading, hideLoading, showToast } = useLoading()
   const [states, setStates] = useState<State[]>([])
 
   const [cities, setCities] = useState<City[]>([])
@@ -79,6 +81,9 @@ try {
 
   const handleStateSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    showLoading(editingState ? "Updating state..." : "Creating state...");
+    
     try {
       if (editingState) {
         // Update existing state
@@ -90,8 +95,11 @@ try {
         const json = await response.json();
         if (json.success) {
           getStates(); // Refresh the list
+          hideLoading();
+          showToast('State updated successfully!', 'success');
         } else {
-          alert(json.message || 'Failed to update state');
+          hideLoading();
+          showToast(json.message || 'Failed to update state', 'error');
         }
       } else {
         // Create new state
@@ -103,8 +111,11 @@ try {
         const json = await response.json();
         if (json.success) {
           getStates(); // Refresh the list
+          hideLoading();
+          showToast('State created successfully!', 'success');
         } else {
-          alert(json.message || 'Failed to create state');
+          hideLoading();
+          showToast(json.message || 'Failed to create state', 'error');
         }
       }
       setIsStateDialogOpen(false)
@@ -112,12 +123,16 @@ try {
       setStateFormData({ name: "", code: "", status: "Active" })
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred');
+      hideLoading();
+      showToast('An error occurred', 'error');
     }
   }
 
   const handleCitySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    showLoading(editingCity ? "Updating city..." : "Creating city...");
+    
     try {
       if (editingCity) {
         // Update existing city
@@ -129,8 +144,11 @@ try {
         const json = await response.json();
         if (json.success) {
           getCities(); // Refresh the list
+          hideLoading();
+          showToast('City updated successfully!', 'success');
         } else {
-          alert(json.message || 'Failed to update city');
+          hideLoading();
+          showToast(json.message || 'Failed to update city', 'error');
         }
       } else {
         // Create new city
@@ -142,8 +160,11 @@ try {
         const json = await response.json();
         if (json.success) {
           getCities(); // Refresh the list
+          hideLoading();
+          showToast('City created successfully!', 'success');
         } else {
-          alert(json.message || 'Failed to create city');
+          hideLoading();
+          showToast(json.message || 'Failed to create city', 'error');
         }
       }
       setIsCityDialogOpen(false)
@@ -151,7 +172,8 @@ try {
       setCityFormData({ name: "", stateId: 0, status: "Active" })
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred');
+      hideLoading();
+      showToast('An error occurred', 'error');
     }
   }
 

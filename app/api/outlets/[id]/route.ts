@@ -55,7 +55,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         manager_name = ?, 
         manager_phone = ?, 
         manager_email = ?, 
-        status = ? 
+        status = ?,
+        outlet_image = ?,
+        gps_latitude = ?,
+        gps_longitude = ?,
+        phone_number = ?,
+        email_id = ?,
+        google_review_link = ?,
+        custom_feedback_form = ?,
+        review_link_config = ?
        WHERE id = ?`,
       [
         data.name,
@@ -66,6 +74,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         data.managerPhone || null,
         data.managerEmail || null,
         data.status,
+        data.outletImage,
+        data.gpsLatitude || null,
+        data.gpsLongitude || null,
+        data.phoneNumber || null,
+        data.emailId || null,
+        data.googleReviewLink || null,
+        data.customFeedbackForm || null,
+        data.reviewLinkConfig || null,
         id
       ]
     );

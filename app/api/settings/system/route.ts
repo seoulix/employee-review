@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
           date_format = ?,
           currency = ?,
           language = ?,
+          copyright = ?,
           updated_at = NOW()
         WHERE id = 1
       `,
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
           data.date_format,
           data.currency,
           data.language,
+          data.copyright,
         ],
       )
     } else {
@@ -62,9 +64,9 @@ export async function POST(request: NextRequest) {
         `
         INSERT INTO system_settings (
           id, system_name, company_name, support_email, support_phone,
-          app_url, timezone, date_format, currency, language,
+          app_url, timezone, date_format, currency, language, copyright,
           created_at, updated_at
-        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `,
         [
           data.system_name,
@@ -76,6 +78,7 @@ export async function POST(request: NextRequest) {
           data.date_format,
           data.currency,
           data.language,
+          data.copyright,
         ],
       )
     }

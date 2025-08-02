@@ -9,35 +9,48 @@ import {
   AlertTriangle,
   Users,
   RefreshCw,
+  Building2,
+  MapPin,
+  Store,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
+import { useLoading } from "@/contexts/LoadingContext";
 // import { cookies } from "next/headers";
 // import { redirect } from "next/navigation";
+type StatWithChange = {
+  title: string;
+  name?: string | undefined;
+  today: number;
+  value?: { name?: string } | string;
+  yesterday: number;
+  subtitle?: string | undefined;
+  change: number;
+  changeType: "positive" | "negative";
+};
+
+type DynamicStats = {
+  totalReviewsToday: StatWithChange;
+  negativeFeedbacks: StatWithChange;
+  counsellingAlerts: number;
+  topPerformerToday: StatWithChange;
+  totalBrands: number;
+  totalStates: number;
+  totalCities: number;
+  totalOutlets: number;
+  totalEmployees: number;
+  recentActivity: {
+    employee: string;
+    outlet: string;
+    rating: number;
+    time: string;
+  }[];
+};
+
 export default function DashboardPage() {
-  type StatWithChange = {
-    title: string;
-    name?: string | undefined;
-    today: number;
-    value?: { name?: string } | string;
-    yesterday: number;
-    subtitle?: string | undefined;
-    change: number;
-    changeType: "positive" | "negative";
-  };
-  type DynamicStats = {
-    totalReviewsToday: StatWithChange;
-    negativeFeedbacks: StatWithChange;
-    counsellingAlerts: number;
-    topPerformerToday: StatWithChange;
-    recentActivity: {
-      employee: string;
-      outlet: string;
-      rating: number;
-      time: string;
-    }[];
-  };
+  const { showLoading, hideLoading, showToast } = useLoading();
   const router = useRouter();
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -64,6 +77,11 @@ export default function DashboardPage() {
       changeType: "positive",
     },
     counsellingAlerts: 0,
+    totalBrands: 0,
+    totalStates: 0,
+    totalCities: 0,
+    totalOutlets: 0,
+    totalEmployees: 0,
     recentActivity: [],
   });
   // const cookieStore = cookies();
@@ -72,16 +90,41 @@ export default function DashboardPage() {
   //   redirect("/admin/login");
   // }
 
-  const refreshData = async () => {
+  const refreshData = async (showToastNotification = false) => {
     setIsRefreshing(true);
-    const res = await fetch("/api/dashboard/stats");
-    if (res.ok) {
-      const { data } = await res.json();
-      console.log(data);
-      setDynamicStats({ ...data });
-    } else {
-      console.log("Can not load the dashboard data ");
+    
+    if (showToastNotification) {
+      showLoading("Refreshing dashboard data...");
     }
+    
+    try {
+      const res = await fetch("/api/dashboard/stats");
+      if (res.ok) {
+        const { data } = await res.json();
+        console.log(data);
+        setDynamicStats({ ...data });
+        
+        if (showToastNotification) {
+          hideLoading();
+          showToast("Dashboard data refreshed successfully!", "success");
+        }
+      } else {
+        console.log("Can not load the dashboard data ");
+        
+        if (showToastNotification) {
+          hideLoading();
+          showToast("Failed to refresh dashboard data", "error");
+        }
+      }
+    } catch (error) {
+      console.error("Error refreshing dashboard:", error);
+      
+      if (showToastNotification) {
+        hideLoading();
+        showToast("Failed to refresh dashboard data", "error");
+      }
+    }
+    
     setTimeout(() => {
       setLastUpdated(new Date());
       setIsRefreshing(false);
@@ -89,9 +132,9 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    refreshData();
+    refreshData(false); // Initial load without toast
     const interval = setInterval(() => {
-      refreshData();
+      refreshData(false); // Auto refresh without toast
       setLastUpdated(new Date());
     }, 30000); // Auto refresh every 30 seconds
 
@@ -135,6 +178,34 @@ export default function DashboardPage() {
       changeType: "warning",
       icon: Users,
     },
+    {
+      title: "Total Brands",
+      value: dynamicStats.totalBrands,
+      change: "Active brands",
+      changeType: "positive",
+      icon: Building2,
+    },
+    {
+      title: "Total Locations",
+      value: `${dynamicStats.totalStates} States, ${dynamicStats.totalCities} Cities`,
+      change: "Coverage areas",
+      changeType: "positive",
+      icon: MapPin,
+    },
+    {
+      title: "Total Outlets",
+      value: dynamicStats.totalOutlets,
+      change: "Active outlets",
+      changeType: "positive",
+      icon: Store,
+    },
+    {
+      title: "Total Employees",
+      value: dynamicStats.totalEmployees,
+      change: "Active employees",
+      changeType: "positive",
+      icon: UserCheck,
+    },
   ];
 
   const recentActivity = dynamicStats.recentActivity;
@@ -152,7 +223,7 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={refreshData}
+              onClick={() => refreshData(true)}
               disabled={isRefreshing}
               style={{borderRadius: "var(--border-radius)"}}
             >
@@ -164,7 +235,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
           {stats.map((stat) => (
             <Card key={stat.title}  style={{borderRadius: "var(--border-radius)"}}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -228,9 +299,9 @@ export default function DashboardPage() {
                         <Badge
                           variant={
                             activity.rating >= 4
-                              ? "primary"
+                              ? "default"
                               : activity.rating >= 3
-                              ? "danger"
+                              ? "secondary"
                               : "destructive"
                           }
                         >
@@ -255,7 +326,11 @@ export default function DashboardPage() {
                 className="w-full justify-start bg-transparent"
                 variant="outline"
                 onClick={() => {
-                  router.push("/admin/feedback-links");
+                  showLoading("Navigating to feedback links...");
+                  setTimeout(() => {
+                    hideLoading();
+                    router.push("/admin/feedback-links");
+                  }, 500);
                 }}
                 style={{borderRadius: "var(--border-radius)"}}
               >
@@ -266,6 +341,13 @@ export default function DashboardPage() {
                style={{borderRadius: "var(--border-radius)"}}
                 className="w-full justify-start bg-transparent"
                 variant="outline"
+                onClick={() => {
+                  showLoading("Loading performance report...");
+                  setTimeout(() => {
+                    hideLoading();
+                    showToast("Performance report feature coming soon!", "info");
+                  }, 1000);
+                }}
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
                 View Performance Report
@@ -274,6 +356,13 @@ export default function DashboardPage() {
                style={{borderRadius: "var(--border-radius)"}}
                 className="w-full justify-start bg-transparent"
                 variant="outline"
+                onClick={() => {
+                  showLoading("Loading review alerts...");
+                  setTimeout(() => {
+                    hideLoading();
+                    showToast("Review alerts feature coming soon!", "info");
+                  }, 1000);
+                }}
               >
                 <AlertTriangle className="mr-2 h-4 w-4" />
                 Review Alerts
@@ -283,7 +372,11 @@ export default function DashboardPage() {
                 className="w-full justify-start bg-transparent"
                 variant="outline"
                 onClick={() => {
-                  router.push("/admin/employees");
+                  showLoading("Navigating to employee management...");
+                  setTimeout(() => {
+                    hideLoading();
+                    router.push("/admin/employees");
+                  }, 500);
                 }}
               >
                 <Users className="mr-2 h-4 w-4" />

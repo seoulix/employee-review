@@ -11,18 +11,31 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Gift, Clock, Star, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useLoading } from "@/contexts/LoadingContext"
 
 interface OutletData {
   outlet_name: string
   brand_name: string
+  brand_logo_url?: string
   city_name: string
   state_name: string
+  outlet_image?: string
 }
 
 interface Employee {
   id: number
   full_name: string
   position: string
+  photo?: string
+  totalReviews?: number
+  rating?: number
+  employee_code?: string
+  outlet?: string
+  brand?: string
+  city?: string
+  state?: string
+  joinDate?: string
+  status?: string
 }
 
 interface FeedbackQuestion {
@@ -42,6 +55,7 @@ export default function FeedbackFormPage() {
   const params = useParams()
   const router = useRouter()
   const token = params.token as string
+  const { showLoading, hideLoading, showToast } = useLoading()
 
   const [formData, setFormData] = useState({
     employee_id: "",
@@ -106,6 +120,7 @@ export default function FeedbackFormPage() {
         setOutletData({
           outlet_name: result.data.outlet_name,
           brand_name: result.data.brand_name,
+          brand_logo_url: result.data.brand_logo_url,
           city_name: result.data.city_name,
           state_name: result.data.state_name,
         })
@@ -116,7 +131,10 @@ export default function FeedbackFormPage() {
         const employeesResult = await employeesResponse.json()
 
         if (employeesResult.success) {
+          console.log('👥 Employees loaded:', employeesResult.data)
           setEmployees(employeesResult.data)
+        } else {
+          console.error('❌ Failed to load employees:', employeesResult.message)
         }
 
         // Fetch feedback questions
@@ -180,7 +198,7 @@ export default function FeedbackFormPage() {
       return
     }
 
-    setIsSubmitting(true)
+    showLoading("Submitting your feedback...")
     setError("")
 
     try {
@@ -211,15 +229,19 @@ export default function FeedbackFormPage() {
         if (formData.rating < 4) {
           await sendLowRatingAlert(result.data.id)
         }
+        hideLoading()
+        showToast("Thank you! Your feedback has been submitted successfully.", "success")
         setIsSubmitted(true)
       } else {
+        hideLoading()
+        showToast(result.message || "Failed to submit feedback", "error")
         setError(result.message || "Failed to submit feedback")
       }
     } catch (error) {
       console.error("Error submitting feedback:", error)
+      hideLoading()
+      showToast("Failed to submit feedback. Please try again.", "error")
       setError("Failed to submit feedback. Please try again.")
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -436,35 +458,180 @@ export default function FeedbackFormPage() {
 
   return (
     <div className="min-h-screen  flex items-center justify-center p-4 dark:text-white dark:bg-[url('https://aws.cloudprojectbootcamp.com/images/starfield.webp')]" >
-      <Card className="w-full max-w-lg">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Star className="w-6 h-6 text-white" />
+      <Card className="w-fit max-w-lg overflow-hidden rounded-3xl border-0 ">
+        <CardHeader 
+          className="relative p-0 overflow-hidden" 
+          style={{
+            backgroundImage: `url(${outletData?.outlet_image || '/uploads/outlets/default.png'})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            minHeight: '300px'
+          }}
+        >
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+          
+          {/* Navigation/Action Icons (like in the photo) */}
+          <div className="absolute top-4 left-4 z-20" onClick={()=>{
+            router.back()
+          }}>
+            <button className="w-10 h-10 bg-white bg-opacity-90 rounded-full flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* <div className="absolute top-4 right-4 z-20 flex space-x-2">
+            <button className="w-10 h-10 bg-white bg-opacity-90 rounded-full flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+            <button className="w-10 h-10 bg-white bg-opacity-90 rounded-full flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+              </svg>
+            </button>
+          </div> */}
+
+          {/* Image Counter (like in the photo) */}
+          <div className="absolute bottom-4 right-4 z-20">
+            <div className="bg-white bg-opacity-90 rounded-lg px-3 py-1 flex items-center space-x-1 shadow-lg">
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-sm font-medium text-gray-700">1/1</span>
             </div>
           </div>
-          <CardTitle className="text-xl font-bold">Hello {formData.customer_name} Thank For Visiting</CardTitle>
 
-          {outletData && (
-            <>
-              <p className="text-gray-600">
-                {outletData.outlet_name} - {outletData.brand_name}
-              </p>
-              <p className="text-sm text-gray-500">
-                {outletData.city_name}, {outletData.state_name}
-              </p>
-            </>
-          )}
-          <CardTitle className="text-2xl font-bold">Please Share Your Experience</CardTitle>
+          {/* Outlet Details Card (like in the photo) */}
+          <div className="absolute bottom-0 left-0 right-0 z-10">
+            <div className="bg-card rounded-t-2xl p-6 shadow-lg">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-foreground mb-1">
+                    {outletData?.outlet_name || 'Restaurant Name'}
+                  </h1>
+                  <p className="text-muted-foreground text-sm mb-2">
+                    {outletData?.city_name}, {outletData?.state_name}
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    {outletData?.brand_name} • Feedback Form
+                  </p>
+                </div>
+                
+                {/* Rating Box (like in the photo) */}
+                {/* <div className="bg-green-500 text-white rounded-lg px-3 py-2 text-center ml-4">
+                  <div className="text-lg font-bold">4.5 ★</div>
+                  <div className="text-xs">Google</div>
+                  <div className="text-xs">50+ reviews</div>
+                </div> */}
+              </div>
 
-          {/* Timer */}
-          {/* <div className="flex items-center justify-center mt-4">
-            <Clock className="h-4 w-4 text-orange-500 mr-2" />
-            <Badge variant={timeLeft <= 5 ? "destructive" : "secondary"}>{timeLeft}s remaining</Badge>
-          </div> */}
+              {/* Action Icons (like in the photo) */}
+              <div className="flex items-center space-x-4">
+                <button className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-sm">Directions</span>
+                </button>
+                <button className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors" onClick={()=>{
+                  window.open(`tel:${outletData?.Manager_Phone}`, '_blank')
+                }}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span className="text-sm">Call</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Brand Logo (positioned like in the photo) */}
+          <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-20">
+            {outletData?.brand_logo_url ? (
+              <div className="w-20 h-20 rounded-full border-4 border-card bg-card shadow-lg flex items-center justify-center">
+                <img 
+                  src={outletData.brand_logo_url} 
+                  alt={`${outletData.brand_name} logo`}
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = '<div class="w-full h-full bg-primary rounded-full flex items-center justify-center"><svg class="w-8 h-8 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>';
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="w-20 h-20 bg-primary rounded-full border-4 border-card shadow-lg flex items-center justify-center">
+                <Star className="w-8 h-8 text-primary-foreground" />
+              </div>
+            )}
+          </div>
+
+          {/* Welcome Message */}
         </CardHeader>
 
         <CardContent>
+          {/* Extraordinary Animated Greeting Card */}
+          <div className="relative overflow-hidden rounded-2xl p-6 mb-6 animate-fade-in-up animate-smooth-vibration">
+            {/* Animated Gradient Background */}
+            <div className="absolute inset-0 animate-gradient-shift bg-gradient-to-r from-yellow-400 via-red-500 to-blue-500 opacity-90"></div>
+            
+            {/* Floating Particles */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="particle particle-1"></div>
+              <div className="particle particle-2"></div>
+              <div className="particle particle-3"></div>
+              <div className="particle particle-4"></div>
+              <div className="particle particle-5"></div>
+            </div>
+            
+            {/* Glowing Border */}
+            <div className="absolute inset-0 rounded-2xl animate-glow-border"></div>
+            
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              {/* Animated Icon */}
+              {/* <div className="inline-flex items-center justify-center w-16 h-16 mb-4 animate-float">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-20"></div>
+                  <div className="relative w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
+                    
+                     
+                  </div>
+                </div>
+              </div> */}
+              
+                          {/* Animated Text */}
+            <h2 className="text-2xl font-bold text-white mb-2 animate-smooth-vibration drop-shadow-lg">
+              Welcome back, {formData.customer_name}!
+            </h2>
+              
+              <div className="space-y-1">
+                <p className="text-white text-base leading-relaxed animate-slide-in-right drop-shadow-lg">
+                  Thank you for choosing us today
+                </p>
+                <p className="text-blue-100 text-xs animate-fade-in-delay drop-shadow-lg">
+                  Your feedback helps us create amazing experiences
+                </p>
+              </div>
+              
+              {/* Animated Decorative Elements */}
+              <div className="flex justify-center space-x-2 mt-4">
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+              </div>
+            </div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -472,85 +639,255 @@ export default function FeedbackFormPage() {
               </div>
             )}
 
-            {/* Employee Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="employee">Select Employee *</Label>
+            {/* Employee Selection - Enhanced UX with Animations */}
+            <div className="space-y-3 animate-fade-in-up-delay">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center animate-pulse">
+                  <span className="text-blue-600 text-xs font-bold animate-bounce">1</span>
+                </div>
+                <Label htmlFor="employee" className="text-base font-semibold text-gray-700 animate-slide-in-left">
+                  Select Employee *
+                </Label>
+              </div>
+              
               <Select
                 value={formData.employee_id}
                 onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-14 text-base transition-all duration-300 hover:scale-105 hover:shadow-lg animate-fade-in-up">
                   <SelectValue placeholder="Choose the employee who served you" />
                 </SelectTrigger>
-                <SelectContent>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id.toString()}>
-                      {employee.full_name} - {employee.position}
+                <SelectContent className="w-full max-w-md">
+                  {employees.map((employee, index) => (
+                    <SelectItem 
+                      key={employee.id} 
+                      value={employee.id.toString()}
+                      className="transition-all duration-200 hover:scale-105"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="flex items-center space-x-2 min-w-0 w-full">
+                        {/* Employee Photo */}
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          {employee.photo ? (
+                            <img 
+                              src={employee.photo} 
+                              alt={employee.full_name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `<span class="text-gray-600 text-xs font-medium">${employee.full_name.charAt(0)}</span>`;
+                                }
+                              }}
+                            />
+                          ) : (
+                            <span className="text-gray-600 text-xs font-medium">
+                              {employee.full_name.charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Employee Details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 text-sm truncate">{employee.full_name}</div>
+                          <div className="text-xs text-gray-500 truncate">{employee.position}</div>
+                          {employee.outlet && (
+                            <div className="text-xs text-gray-400 truncate">{employee.outlet}</div>
+                          )}
+                        </div>
+                        
+                        {/* Rating Stats */}
+                        <div className="text-right flex-shrink-0 ml-2">
+                          {employee.rating && (
+                            <div className="flex items-center space-x-1">
+                              <span className="text-yellow-400 text-xs">★</span>
+                              <span className="text-xs font-medium text-foreground">{employee.rating}</span>
+                            </div>
+                          )}
+                          {employee.totalReviews && (
+                            <div className="text-xs text-muted-foreground">
+                              {employee.totalReviews}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              
+              {/* Selected Employee Details Card */}
+              {formData.employee_id && (() => {
+                const selectedEmployee = employees.find(emp => emp.id.toString() === formData.employee_id);
+                console.log('🎯 Selected employee:', selectedEmployee);
+                if (!selectedEmployee) return null;
+                
+                return (
+                  <div className="bg-gradient-to-r from-accent to-accent/50 rounded-xl p-4 border border-accent animate-fade-in-up">
+                    <div className="flex items-center space-x-4">
+                      {/* Employee Photo */}
+                      <div className="w-16 h-16 rounded-full overflow-hidden bg-background border-2 border-accent shadow-sm">
+                        {selectedEmployee.photo ? (
+                          <img 
+                            src={selectedEmployee.photo} 
+                            alt={selectedEmployee.full_name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `<div class="w-full h-full bg-primary/20 rounded-full flex items-center justify-center"><span class="text-primary text-lg font-bold">${selectedEmployee.full_name.charAt(0)}</span></div>`;
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-primary/20 rounded-full flex items-center justify-center">
+                            <span className="text-primary text-lg font-bold">
+                              {selectedEmployee.full_name.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Employee Info */}
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-foreground">{selectedEmployee.full_name}</h3>
+                        <p className="text-muted-foreground">{selectedEmployee.position}</p>
+                        {selectedEmployee.outlet && (
+                          <p className="text-sm text-muted-foreground">{selectedEmployee.outlet}</p>
+                        )}
+                        {selectedEmployee.employee_code && (
+                          <p className="text-xs text-muted-foreground">ID: {selectedEmployee.employee_code}</p>
+                        )}
+                      </div>
+                      
+                      {/* Stats */}
+                      <div className="text-right">
+                        {selectedEmployee.rating && (
+                          <div className="flex items-center space-x-1 mb-1">
+                            <span className="text-yellow-400 text-lg">★</span>
+                            <span className="text-lg font-bold text-foreground">{selectedEmployee.rating}</span>
+                          </div>
+                        )}
+                        {selectedEmployee.totalReviews && (
+                          <div className="text-sm text-muted-foreground">
+                            {selectedEmployee.totalReviews} reviews
+                          </div>
+                        )}
+                        {selectedEmployee.joinDate && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Since {new Date(selectedEmployee.joinDate).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
-            {/* Rating */}
-            <div className="space-y-3">
-              <Label>Rate Your Experience *</Label>
-              <div className="flex justify-center space-x-2">
-                {[1, 2, 3, 4, 5].map((rating) => (
-                  <button  
-                    key={rating}
-                    type="button"
-                    onClick={() => handleRatingClick(rating)}
-                    className={`w-16 h-16 rounded-full border-2 flex items-center justify-center text-2xl transition-all ${
-                      formData.rating === rating
-                        ? "border-blue-500 bg-blue-50 scale-110"
-                        : "border-gray-300 hover:border-gray-400 hover:scale-105"
-                    }`}
-                    // style={{borderRadius: "var(--border-radius)"}}
-                  >
-                    {getRatingEmoji(rating)}
-                  </button>
-                ))}
+            {/* Rating - Enhanced UX with Animations */}
+            <div className="space-y-4 animate-fade-in-up-delay-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center animate-pulse">
+                  <span className="text-orange-600 text-xs font-bold animate-bounce">2</span>
+                </div>
+                <Label className="text-base font-semibold text-foreground animate-slide-in-left">
+                  Rate Your Experience *
+                </Label>
               </div>
-              {formData.rating > 0 && (
-                <p className="text-center text-sm font-medium text-gray-700">{getRatingText(formData.rating)}</p>
-              )}
+              
+              <div className="bg-card rounded-xl p-6 border border-border shadow-sm animate-fade-in-up">
+                <div className="flex justify-center space-x-3">
+                  {[1, 2, 3, 4, 5].map((rating, index) => (
+                    <button  
+                      key={rating}
+                      type="button"
+                      onClick={() => handleRatingClick(rating)}
+                      className={`w-16 h-16 rounded-full border-2 flex items-center justify-center text-2xl transition-all duration-300 hover:scale-110 animate-smooth-vibration ${
+                        formData.rating === rating
+                          ? "border-orange-500 bg-orange-50 scale-110 shadow-lg animate-bounce"
+                          : "border-border hover:border-orange-300 hover:scale-105 hover:shadow-md"
+                      }`}
+                      style={{ animationDelay: `${index * 150}ms` }}
+                    >
+                      <span className="animate-pulse animate-smooth-vibration">{getRatingEmoji(rating)}</span>
+                    </button>
+                  ))}
+                </div>
+                
+                {formData.rating > 0 && (
+                  <div className="mt-4 text-center animate-fade-in-up">
+                    <p className="text-lg font-semibold text-foreground mb-1 animate-slide-in-up">
+                      {getRatingText(formData.rating)}
+                    </p>
+                    <div className="flex items-center justify-center space-x-1">
+                      {[1, 2, 3, 4, 5].map((star, index) => (
+                        <svg
+                          key={star}
+                          className={`w-4 h-4 transition-all duration-300 ${
+                            star <= formData.rating ? 'text-yellow-400' : 'text-muted-foreground'
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-          {  formData.rating>0 && <div className="space-y-2 border border-gray-200 rounded-lg p-4">
-             <Label htmlFor="Quick_Tiles">{formData.rating && tiles[formData.rating].question}</Label>
-             <div className="flex flex-wrap gap-3">
-  {formData.rating && tiles[formData.rating].tiles.split(",").map((tile: string, index: number) => {
-    const isSelected = formData.tile.tiles.includes(index);
+          {formData.rating > 0 && (
+            <div className="space-y-4 animate-fade-in-up-delay-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center animate-pulse">
+                  <span className="text-green-600 text-xs font-bold animate-bounce">3</span>
+                </div>
+                <Label className="text-base font-semibold text-foreground animate-slide-in-left">
+                  {formData.rating && tiles[formData.rating].question}
+                </Label>
+              </div>
+              
+              <div className="bg-card rounded-xl p-6 border border-border shadow-sm animate-fade-in-up">
+                <div className="flex flex-wrap gap-3">
+                  {formData.rating && tiles[formData.rating].tiles.split(",").map((tile: string, index: number) => {
+                    const isSelected = formData.tile.tiles.includes(index);
 
-    return (
-      <button
-        type="button"
-        key={index}
-        onClick={() => {
-          let newTile = [...formData.tile.tiles];
-          if (isSelected) {
-            newTile = newTile.filter((t) => t !== index);
-          } else {
-            newTile.push(index);
-          }
-          setFormData({ ...formData, tile: { ...formData.tile, tiles: newTile } });
-        }}
-        className={`px-4 py-2 rounded-md text-sm font-medium transition 
-          ${isSelected 
-            ? "bg-yellow-500 text-white shadow-md hover:bg-yellow-600"
-            : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"}
-        `}
-      >
-        {tile.trim()}
-      </button>
-    );
-  })}
-</div>
-
-
-            </div>}
+                    return (
+                      <button
+                        type="button"
+                        key={index}
+                        onClick={() => {
+                          let newTile = [...formData.tile.tiles];
+                          if (isSelected) {
+                            newTile = newTile.filter((t) => t !== index);
+                          } else {
+                            newTile.push(index);
+                          }
+                          setFormData({ ...formData, tile: { ...formData.tile, tiles: newTile } });
+                        }}
+                        className={`px-4 py-3 rounded-full text-sm font-medium transition-all duration-300 border-2 hover:scale-110 animate-smooth-vibration ${
+                          isSelected 
+                            ? "bg-green-500 text-white border-green-500 shadow-lg scale-105 animate-bounce"
+                            : "bg-muted text-foreground border-border hover:border-green-300 hover:bg-green-50 hover:scale-105"
+                        }`}
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <span className="animate-pulse animate-smooth-vibration">{tile.trim()}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
           
 
             {/* Customer Name */}
